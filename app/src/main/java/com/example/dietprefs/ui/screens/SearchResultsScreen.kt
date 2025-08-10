@@ -184,7 +184,7 @@ fun SearchResultsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     SortableHeader(
-                        text = "Dist",
+                        text = "Didst",
                         column = SortColumn.DISTANCE,
                         currentSortState = sortState,
                         onClick = { /* Click handled by Box */ },
