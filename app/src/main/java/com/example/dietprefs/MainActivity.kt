@@ -3,45 +3,57 @@ package com.example.dietprefs
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.dietprefs.ui.navigation.AppNavGraph
+import com.example.dietprefs.ui.screens.PreferenceScreen
+import com.example.dietprefs.ui.screens.SearchResultsScreen
+import com.example.dietprefs.viewmodel.SharedViewModel
 import com.example.dietprefs.ui.theme.DietprefsTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        // Only one instance of SharedViewModel tied to this Activity
+        val sharedViewModel: SharedViewModel by viewModels()
+
         setContent {
             DietprefsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                val navController = rememberNavController()
+                AppNavGraph(navController = navController, sharedViewModel = sharedViewModel)
             }
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    DietprefsTheme {
-        Greeting("Android")
-    }
-}
+//@Composable
+//fun AppNavHost(
+//    navController: NavHostController,
+//    sharedViewModel: SharedViewModel
+//) {
+//    NavHost(
+//        navController = navController,
+//        startDestination = "PreferenceScreen"
+//    ) {
+//        composable("PreferenceScreen") {
+//            PreferenceScreen(
+//                onSearchClick = { navController.navigate("SearchResultsScreen") },
+//                onSettingsClick = { /* TODO: Settings */ },
+//                onUserModeClick = { /* TODO: toggle user mode */ },
+//                sharedViewModel = sharedViewModel
+//            )
+//        }
+//        composable("SearchResultsScreen") {
+//            SearchResultsScreen(
+//                navController = navController,
+//                onSettingsClick = { /* TODO: Settings */ },
+//                sharedViewModel = sharedViewModel
+//            )
+//        }
+//    }
+//}

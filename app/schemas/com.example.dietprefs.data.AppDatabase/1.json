@@ -1,0 +1,397 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "95ce32a07704ff4e8be25da62e4f2312",
+    "entities": [
+      {
+        "tableName": "vendors",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `lat` REAL NOT NULL, `lng` REAL NOT NULL, `region` INTEGER NOT NULL, `delivery` INTEGER NOT NULL, `takeout` INTEGER NOT NULL, `website` TEXT NOT NULL, `grubhub` INTEGER NOT NULL, `doordash` INTEGER NOT NULL, `ubereats` INTEGER NOT NULL, `postmates` INTEGER NOT NULL, `yelp` INTEGER NOT NULL, `googleReviews` INTEGER NOT NULL, `tripadvisor` INTEGER NOT NULL, `hours` TEXT NOT NULL, `seo` TEXT NOT NULL, `phone` INTEGER NOT NULL, `address` TEXT NOT NULL, `zipcode` INTEGER NOT NULL, `customByNature` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lat",
+            "columnName": "lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lng",
+            "columnName": "lng",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "region",
+            "columnName": "region",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "delivery",
+            "columnName": "delivery",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "takeout",
+            "columnName": "takeout",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "website",
+            "columnName": "website",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "grubhub",
+            "columnName": "grubhub",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "doordash",
+            "columnName": "doordash",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ubereats",
+            "columnName": "ubereats",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "postmates",
+            "columnName": "postmates",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "yelp",
+            "columnName": "yelp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "googleReviews",
+            "columnName": "googleReviews",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tripadvisor",
+            "columnName": "tripadvisor",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hours",
+            "columnName": "hours",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seo",
+            "columnName": "seo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phone",
+            "columnName": "phone",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zipcode",
+            "columnName": "zipcode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "customByNature",
+            "columnName": "customByNature",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vendorId` INTEGER NOT NULL, `name` TEXT NOT NULL, `vegetarian` INTEGER NOT NULL, `pescetarian` INTEGER NOT NULL, `vegan` INTEGER NOT NULL, `keto` INTEGER NOT NULL, `organic` INTEGER NOT NULL, `gmoFree` INTEGER NOT NULL, `locallySourced` INTEGER NOT NULL, `raw` INTEGER NOT NULL, `entree` INTEGER NOT NULL, `sweet` INTEGER NOT NULL, `kosher` INTEGER NOT NULL, `halal` INTEGER NOT NULL, `beef` INTEGER NOT NULL, `chicken` INTEGER NOT NULL, `pork` INTEGER NOT NULL, `seafood` INTEGER NOT NULL, `lowSugar` INTEGER NOT NULL, `highProtein` INTEGER NOT NULL, `lowCarb` INTEGER NOT NULL, `noAlliums` INTEGER NOT NULL, `noPorkProducts` INTEGER NOT NULL, `noRedMeat` INTEGER NOT NULL, `noMsg` INTEGER NOT NULL, `noSesame` INTEGER NOT NULL, `noMilk` INTEGER NOT NULL, `noEggs` INTEGER NOT NULL, `noFish` INTEGER NOT NULL, `noShellfish` INTEGER NOT NULL, `noPeanuts` INTEGER NOT NULL, `noTreenuts` INTEGER NOT NULL, `glutenFree` INTEGER NOT NULL, `noSoy` INTEGER NOT NULL, `price` REAL NOT NULL, `upvotes` INTEGER NOT NULL, `totalVotes` INTEGER NOT NULL, `pictures` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vendorId",
+            "columnName": "vendorId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vegetarian",
+            "columnName": "vegetarian",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pescetarian",
+            "columnName": "pescetarian",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vegan",
+            "columnName": "vegan",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "keto",
+            "columnName": "keto",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "organic",
+            "columnName": "organic",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gmoFree",
+            "columnName": "gmoFree",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "locallySourced",
+            "columnName": "locallySourced",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "raw",
+            "columnName": "raw",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entree",
+            "columnName": "entree",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sweet",
+            "columnName": "sweet",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kosher",
+            "columnName": "kosher",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "halal",
+            "columnName": "halal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "beef",
+            "columnName": "beef",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chicken",
+            "columnName": "chicken",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pork",
+            "columnName": "pork",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seafood",
+            "columnName": "seafood",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lowSugar",
+            "columnName": "lowSugar",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "highProtein",
+            "columnName": "highProtein",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lowCarb",
+            "columnName": "lowCarb",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noAlliums",
+            "columnName": "noAlliums",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noPorkProducts",
+            "columnName": "noPorkProducts",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noRedMeat",
+            "columnName": "noRedMeat",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noMsg",
+            "columnName": "noMsg",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noSesame",
+            "columnName": "noSesame",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noMilk",
+            "columnName": "noMilk",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noEggs",
+            "columnName": "noEggs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noFish",
+            "columnName": "noFish",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noShellfish",
+            "columnName": "noShellfish",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noPeanuts",
+            "columnName": "noPeanuts",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noTreenuts",
+            "columnName": "noTreenuts",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "glutenFree",
+            "columnName": "glutenFree",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noSoy",
+            "columnName": "noSoy",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "upvotes",
+            "columnName": "upvotes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalVotes",
+            "columnName": "totalVotes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pictures",
+            "columnName": "pictures",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '95ce32a07704ff4e8be25da62e4f2312')"
+    ]
+  }
+}
