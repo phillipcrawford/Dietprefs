@@ -1,6 +1,5 @@
-package com.example.dietprefs.ui.screens // Original package
+package com.example.dietprefs.ui.screens // Assuming a package structure
 
-import android.util.Log // For logging
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,38 +13,30 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button // For FilterButton
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Button // Assuming you want M3 Button
+import androidx.compose.material3.CircularProgressIndicator // For loading state, optional
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme // For colors and typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector // For PreferenceDisplayRow
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow // For PreferenceDisplayRow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.dietprefs.data.AppDatabase
 import com.example.dietprefs.model.Preference
 import com.example.dietprefs.model.SortColumn
-import com.example.dietprefs.model.SortDirection // Corrected: was com.example.dietprefs.model.SortState
-import com.example.dietprefs.model.SortState // Added for SortableHeader parameter type
-import com.example.dietprefs.ui.theme.dietprefsGrey
+import com.example.dietprefs.model.SortDirection
+import com.example.dietprefs.ui.theme.dietprefsGrey // Assuming these are defined in your theme
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
 import com.example.dietprefs.viewmodel.SharedViewModel
@@ -56,69 +47,48 @@ import kotlinx.coroutines.launch
 fun SearchResultsScreen(
     navController: NavController,
     sharedViewModel: SharedViewModel,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit // From your existing SearchResultsTopBar
 ) {
     // --- State Observation ---
     val pagedVendors by sharedViewModel.pagedVendors.collectAsState()
     val totalResults by sharedViewModel.totalResultsCount.collectAsState()
-    val visibleRange by sharedViewModel.visibleRange.collectAsState() // From original context
-    val sortState by sharedViewModel.sortState.collectAsState()
+    val visibleRange by sharedViewModel.visibleRange.collectAsState()
+    val sortState by sharedViewModel.sortState.collectAsState() // Observe sort state
+
     val user1Prefs by sharedViewModel.user1Prefs.collectAsState()
     val user2Prefs by sharedViewModel.user2Prefs.collectAsState()
 
-    // NEW: Observe isLoading from ViewModel
-    val isLoadingFromViewModel by sharedViewModel.isLoading.collectAsState()
-
     val listState = rememberLazyListState()
-    var searchQuery by remember { mutableStateOf("") }
+    var searchQuery by remember { mutableStateOf("") } // Local search query
 
+    // Determine user mode for results display (from your existing code)
     val isTwoUserMode = user1Prefs.isNotEmpty() && user2Prefs.isNotEmpty()
+    val isSingleUserModeWithUser1 = user1Prefs.isNotEmpty() && user2Prefs.isEmpty()
+    val isSingleUserModeWithUser2 = user1Prefs.isEmpty() && user2Prefs.isNotEmpty()
 
     // --- Effects ---
-    // Update visible range based on LazyListState (from original context)
-    LaunchedEffect(listState.firstVisibleItemIndex, pagedVendors.size, totalResults) {
+    // Update visible range based on LazyListState
+    LaunchedEffect(listState.firstVisibleItemIndex, pagedVendors.size) {
         if (pagedVendors.isNotEmpty()) {
             val start = listState.firstVisibleItemIndex + 1
-            // Ensure end does not exceed pagedVendors.size if it's less than totalResults (e.g., during initial load/pagination)
-            // but can go up to totalResults if pagedVendors is the full list after pagination completes
-            val currentListSize = pagedVendors.size
-            val end = (listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size)
-                .coerceAtMost(currentListSize) // Cannot exceed current displayed items
-            if (start <= end) { // Ensure valid range
-                sharedViewModel.updateVisibleRange(start, end)
-            } else if (currentListSize > 0) { // If start > end but list is not empty (e.g. scrolled past end)
-                sharedViewModel.updateVisibleRange(currentListSize, currentListSize)
-            } else { // List is empty
-                sharedViewModel.updateVisibleRange(0, 0)
-            }
+            val end = (start + listState.layoutInfo.visibleItemsInfo.size - 1)
+                .coerceAtMost(pagedVendors.size)
+            sharedViewModel.updateVisibleRange(start, end)
         } else {
             sharedViewModel.updateVisibleRange(0, 0)
         }
     }
 
-
-    val context = LocalContext.current
-    LaunchedEffect(user1Prefs, user2Prefs) {
-        Log.d("SearchResultsScreen", "LaunchedEffect (prefs changed): Calling loadAndComputeResults. U1: ${user1Prefs.joinToString { it.name }}, U2: ${user2Prefs.joinToString { it.name }}")
-        sharedViewModel.loadAndComputeResults(AppDatabase.getDatabase(context))
-    }
-    // Optional: Initial load if preferences might be set before reaching this screen,
-    // or if you want to load even with no preferences.
-    // Ensure it doesn't conflict with the preference-triggered load.
-    LaunchedEffect(Unit) {
-        if (pagedVendors.isEmpty() && !isLoadingFromViewModel && (user1Prefs.isNotEmpty() || user2Prefs.isNotEmpty())) {
-            Log.d("SearchResultsScreen", "LaunchedEffect (Initial with Prefs): Calling loadAndComputeResults.")
-            sharedViewModel.loadAndComputeResults(AppDatabase.getDatabase(context))
-        } else if (pagedVendors.isEmpty() && !isLoadingFromViewModel && user1Prefs.isEmpty() && user2Prefs.isEmpty()) {
-            // If you want to load *something* even with no prefs, do it here.
-            // Otherwise, it will wait for prefs to be selected.
-            // Log.d("SearchResultsScreen", "LaunchedEffect (Initial no Prefs): No prefs selected, load not triggered by default.")
-        }
-    }
+    // Initial load of results (assuming context is available here or passed)
+    // This might be better triggered from where you navigate to this screen.
+    // val context = LocalContext.current // If you need context here
+    // LaunchedEffect(Unit) {
+    //     sharedViewModel.loadAndComputeResults(AppDatabase.getDatabase(context))
+    // }
 
     Scaffold(
         topBar = {
-            SearchResultsTopBar(
+            SearchResultsTopBar( // Using your existing TopBar
                 user1Prefs = user1Prefs,
                 user2Prefs = user2Prefs,
                 navController = navController,
@@ -131,16 +101,16 @@ fun SearchResultsScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // --- Sortable Table Header (from original context) ---
+            // --- Sortable Table Header ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(dietprefsGrey)
+                    .background(dietprefsGrey) // Light grey background for header
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .defaultMinSize(minHeight = if (isTwoUserMode) 56.dp else Dp.Unspecified),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Vendor Header
+                // Vendor Header (includes rating string and result count)
                 Column(
                     modifier = Modifier
                         .weight(2f)
@@ -150,23 +120,21 @@ fun SearchResultsScreen(
                         text = "Vendor",
                         column = SortColumn.VENDOR_RATING,
                         currentSortState = sortState,
-                        onClick = { /* Click handled by Column */ }
+                        onClick = { /* sharedViewModel.updateSortState(SortColumn.VENDOR_RATING) */ }
                     )
                     if (totalResults > 0) {
                         Text(
                             text = "${visibleRange.first}–${visibleRange.second} of $totalResults",
                             fontWeight = FontWeight.Normal,
-                            fontSize = 11.sp,
+                            fontSize = 11.sp, // Slightly smaller
                             color = Color.White,
                             modifier = Modifier
                                 .padding(top = 2.dp)
                                 .align(Alignment.End)
                         )
                     } else {
-                        Text(
-                            text = if (isLoadingFromViewModel) "Loading..."
-                            else if (searchQuery.isNotBlank() || user1Prefs.isNotEmpty() || user2Prefs.isNotEmpty()) "0 results"
-                            else "Select preferences", // Default message before any action
+                        Text( // Placeholder if no results yet, or show "0 results"
+                            text = if (searchQuery.isNotBlank() || user1Prefs.isNotEmpty() || user2Prefs.isNotEmpty()) "0 results" else "Loading...",
                             fontWeight = FontWeight.Normal,
                             fontSize = 11.sp,
                             color = Color.White,
@@ -176,34 +144,37 @@ fun SearchResultsScreen(
                         )
                     }
                 }
-                // Distance Header
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { sharedViewModel.updateSortState(SortColumn.DISTANCE) },
+                    //.fillMaxHeight(),
                     contentAlignment = Alignment.Center
                 ) {
                     SortableHeader(
                         text = "Dist",
                         column = SortColumn.DISTANCE,
                         currentSortState = sortState,
-                        onClick = { /* Click handled by Box */ },
+                        onClick = { /*sharedViewModel.updateSortState(SortColumn.DISTANCE) */ },
+                        //modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
                 }
-                // Menu Items Header
+
+                // Menu Items Header (adapts to user mode)
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { sharedViewModel.updateSortState(SortColumn.MENU_ITEMS) },
+                    //.fillMaxHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     SortableHeader(
-                        text = "Menu Items",
+                        text = "Menu Items", // Shorter text for two user mode if needed
                         column = SortColumn.MENU_ITEMS,
                         currentSortState = sortState,
-                        onClick = { /* Click handled by Column */ },
+                        onClick = { /* sharedViewModel.updateSortState(SortColumn.MENU_ITEMS) */ },
                         textAlign = TextAlign.Center
                     )
                     if (isTwoUserMode) {
@@ -229,78 +200,72 @@ fun SearchResultsScreen(
             Divider()
 
             // --- Results List or Empty/Loading State ---
-            val filteredVendors = remember(pagedVendors, searchQuery) {
-                pagedVendors.filter { it.vendorName.contains(searchQuery, ignoreCase = true) }
-            }
+            // A simple loading check (you might have a more sophisticated one in ViewModel)
+            val isLoading = pagedVendors.isEmpty() && (user1Prefs.isNotEmpty() || user2Prefs.isNotEmpty()) && totalResults == 0 // Basic loading heuristic
 
-            if (isLoadingFromViewModel && filteredVendors.isEmpty() && searchQuery.isBlank()) {
-                // Show general loading indicator ONLY if actively loading, list is empty, AND not due to an active search query filtering to empty
-                Log.d("SearchResultsScreen", "UI: isLoadingFromViewModel is true and filteredVendors is empty (no search query). Showing Centered CircularProgressIndicator.")
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f), contentAlignment = Alignment.Center) {
+            if (isLoading && searchQuery.isBlank()) { // Show loading only if not actively searching an empty list
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else if (filteredVendors.isEmpty()) {
-                // This covers:
-                // 1. No results match preferences (and not loading).
-                // 2. No results match search query (and not loading).
-                // 3. Initial state before preferences are selected (and not loading).
-                Log.d("SearchResultsScreen", "UI: filteredVendors is empty. isLoading: $isLoadingFromViewModel. Determining empty state message.")
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f)
-                    .padding(16.dp), contentAlignment = Alignment.Center) {
+            } else if (pagedVendors.filter { it.vendorName.contains(searchQuery, ignoreCase = true) }.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        text = when {
-                            isLoadingFromViewModel -> "Loading matching vendors..." // Should be less common here due to outer if
-                            user1Prefs.isEmpty() && user2Prefs.isEmpty() && searchQuery.isBlank() -> "Please select preferences to see results."
-                            searchQuery.isNotBlank() -> "No vendors match your search '$searchQuery'."
-                            else -> "No vendors match the selected preferences."
-                        },
+                        if (user1Prefs.isEmpty() && user2Prefs.isEmpty()) "Please select preferences to see results."
+                        else if (searchQuery.isNotBlank()) "No vendors match your search '$searchQuery'."
+                        else "No vendors match the selected preferences.",
                         textAlign = TextAlign.Center
                     )
                 }
             } else {
-                Log.d("SearchResultsScreen", "UI: Displaying LazyColumn with ${filteredVendors.size} filtered vendors.")
                 LazyColumn(modifier = Modifier.weight(1f), state = listState) {
                     itemsIndexed(
-                        items = filteredVendors,
-                        key = { _, vendor -> vendor.vendorName + vendor.querySpecificRatingString } // Using original key from context
+                        items = pagedVendors.filter {
+                            it.vendorName.contains(searchQuery, ignoreCase = true)
+                        },
+                        key = { _, vendor -> vendor.vendorName + vendor.querySpecificRatingString } // More unique key
                     ) { index, vendor ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.Top
+                                .padding(horizontal = 16.dp, vertical = 10.dp), // Slightly reduced vertical padding
+                            verticalAlignment = Alignment.Top // Align to top for multi-line text
                         ) {
+                            // Vendor Name and Rating
                             Box(
                                 modifier = Modifier
-                                    .weight(2f)
+                                    .weight(2f) // This Box takes up 2/4 of the available width
                                     .padding(end = 8.dp)
+                                // .height(IntrinsicSize.Min) // Optional: If you need to ensure Box wraps content height
                             ) {
+                                // Vendor Name - Aligned to TopStart (default for Box content, but explicit is fine)
                                 Text(
                                     text = vendor.vendorName,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
                                     modifier = Modifier.align(Alignment.TopStart)
                                 )
+
+                                // Rating String - Aligned to TopEnd (Top Right)
                                 Text(
                                     text = "Rating: ${vendor.querySpecificRatingString}",
                                     fontSize = 13.sp,
                                     color = Color.Gray,
-                                    modifier = Modifier.align(Alignment.TopEnd)
+                                    modifier = Modifier.align(Alignment.TopEnd) // <<< ALIGN TO TOP END
                                 )
                             }
+
+                            // Distance
                             Text(
                                 String.format("%.1f mi", vendor.distanceMiles),
                                 modifier = Modifier.weight(1f),
                                 fontSize = 14.sp,
                                 textAlign = TextAlign.Center
                             )
+
+                            // Menu Item Counts (adapts to user mode)
                             Column(
                                 modifier = Modifier.weight(1f),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally // Center the text content
                             ) {
                                 if (isTwoUserMode) {
                                     Text(
@@ -308,7 +273,7 @@ fun SearchResultsScreen(
                                         fontSize = 14.sp,
                                         textAlign = TextAlign.Center
                                     )
-                                } else {
+                                } else { // Single user mode or no users with preferences
                                     Text(
                                         text = "${vendor.combinedRelevantItemCount}",
                                         fontSize = 14.sp,
@@ -320,9 +285,8 @@ fun SearchResultsScreen(
                         Divider()
 
                         // Pagination Trigger
-                        if (index >= filteredVendors.size - 3 && filteredVendors.size < totalResults && !isLoadingFromViewModel) {
-                            LaunchedEffect(filteredVendors.size, totalResults) { // Re-key on list size and totalResults
-                                Log.d("SearchResultsScreen", "Pagination Triggered. Index: $index, FilteredSize: ${filteredVendors.size}, Total: $totalResults")
+                        if (index >= pagedVendors.size - 3 && pagedVendors.size < totalResults) {
+                            LaunchedEffect(pagedVendors.size) { // Re-key on list size
                                 sharedViewModel.loadNextPage()
                             }
                         }
@@ -330,7 +294,7 @@ fun SearchResultsScreen(
                 }
             }
 
-            // --- Search Bar (from original context) ---
+            // --- Search Bar (from your existing code) ---
             TextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -339,7 +303,7 @@ fun SearchResultsScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 shape = RoundedCornerShape(24.dp),
-                colors = TextFieldDefaults.colors(
+                colors = TextFieldDefaults.colors( // Assuming M3 TextFieldColors
                     focusedContainerColor = Color(0xFFF0F0F0),
                     unfocusedContainerColor = Color(0xFFF0F0F0),
                     disabledContainerColor = Color(0xFFF0F0F0),
@@ -350,7 +314,8 @@ fun SearchResultsScreen(
                 singleLine = true
             )
 
-            // --- Filter Buttons (from original context) ---
+            // --- Filter Buttons (from your existing code, simplified) ---
+            // This part is kept as you had it, functionality for these buttons is separate.
             Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 4.dp)) {
                 Text("Filter by (Not Implemented):", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 4.dp))
                 for (row in 0 until 2) {
@@ -363,17 +328,15 @@ fun SearchResultsScreen(
                             FilterButton(label = filterName, onClick = { /* TODO */ })
                         }
                     }
-                    if (row < 1) Spacer(modifier = Modifier.height(8.dp))
+                    if (row < 1) Spacer(modifier = Modifier.height(8.dp)) // Spacer only between rows
                 }
             }
         }
     }
 }
 
-// --- Helper Composables from original context [1] ---
-
 @Composable
-fun SearchResultsTopBar(
+fun SearchResultsTopBar( // Your existing TopBar, slightly adapted for imports
     user1Prefs: Set<Preference>,
     user2Prefs: Set<Preference>,
     navController: NavController,
@@ -385,17 +348,17 @@ fun SearchResultsTopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(128.dp)
-            .background(dietprefsGrey)
+            .height(128.dp) // Consider adjusting height or making it dynamic
+            .background(dietprefsGrey) // Make sure dietprefsGrey is defined
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         IconButton(
             onClick = {
                 if (isBackEnabled) {
-                    isBackEnabled = false
+                    isBackEnabled = false // Prevent double taps
                     navController.popBackStack()
-                    coroutineScope.launch {
-                        delay(300)
+                    coroutineScope.launch { // Add delay for smoother transition if needed
+                        delay(300) // Optional delay
                         isBackEnabled = true
                     }
                 }
@@ -408,9 +371,9 @@ fun SearchResultsTopBar(
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
-                .fillMaxWidth(0.7f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            horizontalAlignment = Alignment.Start // As per original
+                .fillMaxWidth(0.7f), // Adjusted width
+            verticalArrangement = Arrangement.spacedBy(2.dp), // Reduced spacing
+            horizontalAlignment = Alignment.Start
         ) {
             if (user1Prefs.isNotEmpty()) {
                 PreferenceDisplayRow(prefs = user1Prefs, userColor = user1Red, icon = Icons.Default.Person, maxLines = if (user2Prefs.isEmpty()) 3 else 2)
@@ -427,10 +390,10 @@ fun SearchResultsTopBar(
 }
 
 @Composable
-private fun PreferenceDisplayRow( // Marked private as in original
+private fun PreferenceDisplayRow(
     prefs: Set<Preference>,
     userColor: Color,
-    icon: ImageVector, // androidx.compose.ui.graphics.vector.ImageVector
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     maxLines: Int
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -438,66 +401,63 @@ private fun PreferenceDisplayRow( // Marked private as in original
             imageVector = icon,
             contentDescription = "User Preferences",
             tint = userColor,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(18.dp) // Adjusted size
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             prefs.joinToString(", ") { it.display },
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
+            fontSize = 15.sp, // Adjusted size
+            fontWeight = FontWeight.Medium, // Adjusted weight
             color = userColor,
             maxLines = maxLines,
-            overflow = TextOverflow.Ellipsis // androidx.compose.ui.text.style.TextOverflow
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis // Handle overflow
         )
     }
 }
+
 
 @Composable
 fun SortableHeader(
     text: String,
     column: SortColumn,
-    currentSortState: SortState, // Changed from com.example.helloworldapp.model.SortState to SortState (assuming import)
+    currentSortState: com.example.dietprefs.model.SortState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    textAlign: TextAlign? = null
+    textAlign: TextAlign? = null // Allow specifying text alignment
 ) {
     Row(
-        modifier = modifier
-            .padding(vertical = 4.dp)
-            .clickable(onClick = onClick), // Added clickable here as parent column/box handles it
+        modifier = modifier.padding(vertical = 4.dp), // Added some horizontal padding
         verticalAlignment = Alignment.CenterVertically,
-        // Original logic for horizontalArrangement
-        horizontalArrangement = if (textAlign == TextAlign.Center) Arrangement.Center else Arrangement.Start // Original was SpaceBetween, but Start might be better if icon is always present (even if spacer)
+        horizontalArrangement = if (textAlign == TextAlign.Center) Arrangement.Center else Arrangement.SpaceBetween
     ) {
         Text(
             text = text,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold, // Header text is bold
+            fontSize = 14.sp,             // Adjusted font size
             color = Color.White,
-            textAlign = textAlign ?: TextAlign.Start
+            textAlign = textAlign ?: TextAlign.Start // Allow specifying text alignment
         )
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(4.dp)) // Space between text and icon
         if (currentSortState.column == column) {
             Icon(
                 imageVector = if (currentSortState.direction == SortDirection.ASCENDING) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
                 contentDescription = "Sort Direction: ${currentSortState.direction}",
-                tint = Color.White, // Added tint for visibility
                 modifier = Modifier.size(16.dp)
             )
         } else {
-            Spacer(Modifier.size(16.dp)) // Keep spacer for alignment
+            // Optional: Add a transparent spacer to keep alignment consistent when icon is not visible
+            Spacer(Modifier.size(16.dp))
         }
     }
 }
 
 @Composable
-fun FilterButton(label: String, onClick: () -> Unit) { // Restored to original styled version
+fun FilterButton(label: String, onClick: () -> Unit) { // Added onClick
     Button(
         onClick = onClick,
-        modifier = Modifier.padding(horizontal = 2.dp),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary), // Example styling, adjust as needed or use your original
+        modifier = Modifier.padding(horizontal = 2.dp), // Reduced padding
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp) // Smaller button
     ) {
-        Text(label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSecondary) // Example styling
+        Text(label, fontSize = 12.sp) // Smaller text
     }
 }
