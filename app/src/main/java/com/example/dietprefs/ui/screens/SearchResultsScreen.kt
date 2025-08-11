@@ -36,7 +36,7 @@ import androidx.navigation.NavController
 import com.example.dietprefs.model.Preference
 import com.example.dietprefs.model.SortColumn
 import com.example.dietprefs.model.SortDirection
-import com.example.dietprefs.ui.theme.dietprefsGrey // Assuming these are defined in your theme
+import com.example.dietprefs.ui.theme.dietprefsGrey
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
 import com.example.dietprefs.viewmodel.SharedViewModel
