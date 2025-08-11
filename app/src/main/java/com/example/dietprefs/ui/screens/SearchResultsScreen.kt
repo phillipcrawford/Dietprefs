@@ -57,6 +57,7 @@ fun SearchResultsScreen(
 
     val user1Prefs by sharedViewModel.user1Prefs.collectAsState()
     val user2Prefs by sharedViewModel.user2Prefs.collectAsState()
+    val isLoading by sharedViewModel.isLoading.collectAsState()
 
     val listState = rememberLazyListState()
     var searchQuery by remember { mutableStateOf("") } // Local search query
