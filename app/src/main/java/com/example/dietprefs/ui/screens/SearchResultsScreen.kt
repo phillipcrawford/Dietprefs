@@ -169,10 +169,9 @@ fun SearchResultsScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     SortableHeader(
-                        text = "Menu Items", // Shorter text for two user mode if needed
+                        text = "Menu Items",
                         column = SortColumn.MENU_ITEMS,
                         currentSortState = sortState,
-                        onClick = { /* sharedViewModel.updateSortState(SortColumn.MENU_ITEMS) */ },
                         textAlign = TextAlign.Center
                     )
                     if (isTwoUserMode) {
@@ -414,9 +413,8 @@ fun SortableHeader(
     text: String,
     column: SortColumn,
     currentSortState: com.example.dietprefs.model.SortState,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    textAlign: TextAlign? = null // Allow specifying text alignment
+    textAlign: TextAlign? = null
 ) {
     Row(
         modifier = modifier.padding(vertical = 4.dp), // Added some horizontal padding
