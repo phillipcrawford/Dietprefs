@@ -42,6 +42,11 @@ class SharedViewModel : ViewModel() {
     private val _sortState = MutableStateFlow(SortState()) // Default sort from SortType.kt
     val sortState: StateFlow<SortState> = _sortState.asStateFlow()
 
+
+    // --- LOADING STATE ---
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     fun updateVisibleRange(start: Int, end: Int) {
         _visibleRange.value = start to end
     }
@@ -100,8 +105,13 @@ class SharedViewModel : ViewModel() {
 
     fun loadAndComputeResults(db: AppDatabase) {
         viewModelScope.launch {
-            val allVendorsWithItems = db.vendorDao().getVendorsWithItems()
-            computeAndProcessResults(allVendorsWithItems)
+            _isLoading.value = true
+            try {
+                val allVendorsWithItems = db.vendorDao().getVendorsWithItems()
+                computeAndProcessResults(allVendorsWithItems)
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 

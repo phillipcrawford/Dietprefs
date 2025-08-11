@@ -210,9 +210,7 @@ fun SearchResultsScreen(
             } else if (pagedVendors.filter { it.vendorName.contains(searchQuery, ignoreCase = true) }.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        if (user1Prefs.isEmpty() && user2Prefs.isEmpty()) "Please select preferences to see results."
-                        else if (searchQuery.isNotBlank()) "No vendors match your search '$searchQuery'."
-                        else "No vendors match the selected preferences.",
+                        "No vendors match the selected preferences.",
                         textAlign = TextAlign.Center
                     )
                 }
