@@ -62,10 +62,8 @@ fun SearchResultsScreen(
     val listState = rememberLazyListState()
     var searchQuery by remember { mutableStateOf("") } // Local search query
 
-    // Determine user mode for results display (from your existing code)
+    // Determine user mode for results display
     val isTwoUserMode = user1Prefs.isNotEmpty() && user2Prefs.isNotEmpty()
-    val isSingleUserModeWithUser1 = user1Prefs.isNotEmpty() && user2Prefs.isEmpty()
-    val isSingleUserModeWithUser2 = user1Prefs.isEmpty() && user2Prefs.isNotEmpty()
 
     // --- Effects ---
     // Update visible range based on LazyListState
@@ -341,7 +339,7 @@ fun SearchResultsTopBar( // Your existing TopBar, slightly adapted for imports
         modifier = Modifier
             .fillMaxWidth()
             .height(128.dp) // Consider adjusting height or making it dynamic
-            .background(dietprefsGrey) // Make sure dietprefsGrey is defined
+            .background(dietprefsGrey)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         IconButton(
