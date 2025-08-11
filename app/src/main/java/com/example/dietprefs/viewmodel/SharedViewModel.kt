@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-// import kotlin.math.roundToInt // Only if you were using the old rating scaling
 
 class SharedViewModel : ViewModel() {
 

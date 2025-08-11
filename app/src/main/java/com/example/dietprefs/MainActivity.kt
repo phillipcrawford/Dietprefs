@@ -31,29 +31,3 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//@Composable
-//fun AppNavHost(
-//    navController: NavHostController,
-//    sharedViewModel: SharedViewModel
-//) {
-//    NavHost(
-//        navController = navController,
-//        startDestination = "PreferenceScreen"
-//    ) {
-//        composable("PreferenceScreen") {
-//            PreferenceScreen(
-//                onSearchClick = { navController.navigate("SearchResultsScreen") },
-//                onSettingsClick = { /* TODO: Settings */ },
-//                onUserModeClick = { /* TODO: toggle user mode */ },
-//                sharedViewModel = sharedViewModel
-//            )
-//        }
-//        composable("SearchResultsScreen") {
-//            SearchResultsScreen(
-//                navController = navController,
-//                onSettingsClick = { /* TODO: Settings */ },
-//                sharedViewModel = sharedViewModel
-//            )
-//        }
-//    }
-//}
