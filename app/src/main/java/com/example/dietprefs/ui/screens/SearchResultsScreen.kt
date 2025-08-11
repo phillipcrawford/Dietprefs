@@ -120,8 +120,7 @@ fun SearchResultsScreen(
                     SortableHeader(
                         text = "Vendor",
                         column = SortColumn.VENDOR_RATING,
-                        currentSortState = sortState,
-                        onClick = { /* sharedViewModel.updateSortState(SortColumn.VENDOR_RATING) */ }
+                        currentSortState = sortState
                     )
                     if (totalResults > 0) {
                         Text(
@@ -156,8 +155,6 @@ fun SearchResultsScreen(
                         text = "Dist",
                         column = SortColumn.DISTANCE,
                         currentSortState = sortState,
-                        onClick = { /*sharedViewModel.updateSortState(SortColumn.DISTANCE) */ },
-                        //modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
                 }
