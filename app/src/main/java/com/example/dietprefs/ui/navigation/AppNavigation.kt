@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.dietprefs.ui.screens.PreferenceScreen
 import com.example.dietprefs.ui.screens.SearchResultsScreen
+import com.example.dietprefs.ui.screens.VendorDetailScreen
 import com.example.dietprefs.viewmodel.SharedViewModel
 
 @Composable
@@ -35,6 +36,16 @@ fun AppNavGraph(navController: NavHostController, sharedViewModel: SharedViewMod
 
         composable(Screen.Settings.route) {
             /* TODO: Implement SettingsScreen() */
+        }
+
+        composable("${Screen.VendorDetail.route}/{vendorName}") { backStackEntry ->
+            val vendorName = backStackEntry.arguments?.getString("vendorName") ?: ""
+            VendorDetailScreen(
+                vendorName = vendorName,
+                navController = navController,
+                sharedViewModel = sharedViewModel,
+                onSettingsClick = { navController.navigate(Screen.Settings.route) }
+            )
         }
     }
 }

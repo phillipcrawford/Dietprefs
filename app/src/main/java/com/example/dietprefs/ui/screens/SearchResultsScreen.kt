@@ -217,6 +217,9 @@ fun SearchResultsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .clickable { 
+                                    navController.navigate("${com.example.dietprefs.ui.navigation.Screen.VendorDetail.route}/${vendor.vendorName}") 
+                                }
                                 .padding(horizontal = 16.dp, vertical = 10.dp), // Slightly reduced vertical padding
                             verticalAlignment = Alignment.Top // Align to top for multi-line text
                         ) {
