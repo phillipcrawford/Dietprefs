@@ -53,7 +53,7 @@ fun SearchResultsScreen(
     val pagedVendors by sharedViewModel.pagedVendors.collectAsState()
     val totalResults by sharedViewModel.totalResultsCount.collectAsState()
     val visibleRange by sharedViewModel.visibleRange.collectAsState()
-    val sortState by sharedViewModel.sortState.collectAsState() // Observe sort state
+    val sortState by sharedViewModel.sortState.collectAsState()
 
     val user1Prefs by sharedViewModel.user1Prefs.collectAsState()
     val user2Prefs by sharedViewModel.user2Prefs.collectAsState()
