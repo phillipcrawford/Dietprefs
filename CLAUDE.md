@@ -54,8 +54,44 @@ Central state management for:
 - Extensive logging for debugging preference matching
 - UI screens for preferences and search results (basic implementation)
 
+## Wireframes & Target Design
+
+### Wireframe Files
+Located in `/wireframes/` directory:
+- `Dietprefs (1 First Load Demo Video).png` - Complete user flow from welcome to results
+- `Dietprefs (2 Single Person Mode).png` - Single user flow and settings screen
+- `Dietprefs (3 Multiple Person Mode).png` - Dual user mode with split counts
+- `Dietprefs (4 Third Page Restaraunt Card).png` - Restaurant detail screens
+- `Dietprefs (5 Add data Interface).png` - Data management (separate app scope)
+
+### User Flow (from wireframes)
+1. **Welcome Screen**: "DietPrefs - A flair for food" with onboarding
+2. **Preference Selection**: Progressive selection of dietary preferences
+3. **Multi-User Mode**: Support for two users with color-coded preferences (red/magenta)
+4. **Results List**: Vendor list with ratings, distances, and dual-user item counts
+5. **Restaurant Detail**: Individual vendor view with menu items, voting, and integrations
+
+### Key UI Components
+- **Top Bar**: Shows current preference summary for both users
+- **Results Table**: Sortable columns (Vendor/Rating, Distance, Menu Items)
+- **Dual User Indicators**: Person icons and split counts (e.g., "4 | 3" items)
+- **Search & Filters**: Bottom search bar with filter tags
+- **Restaurant Cards**: 
+  - Menu items with user-specific matching indicators
+  - Tinder-style photo voting system
+  - Delivery platform integration (Ubereats, Grubhub, DoorDash, etc.)
+  - Review site links (Yelp, Google, TripAdvisor)
+  - Map, hours, contact info, directions
+
+### Implementation Status vs Wireframes
+✅ **Completed**: Multi-user preferences, results filtering, sorting, dual counts
+🚧 **In Progress**: Search functionality (placeholder), filter tags
+❌ **Missing**: Welcome screen, restaurant detail screen, photo voting, external integrations
+
 ## Recent Work Context
 - Focus on preference filtering logic and debugging
 - Rating system based on relevant items only
 - Multi-user preference handling with StateFlow
 - Performance optimization for large vendor datasets
+- Fixed infinite loading spinner and empty state handling
+- Removed dead code and unused parameters
