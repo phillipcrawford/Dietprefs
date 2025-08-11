@@ -201,9 +201,6 @@ fun SearchResultsScreen(
             Divider()
 
             // --- Results List or Empty/Loading State ---
-            // A simple loading check (you might have a more sophisticated one in ViewModel)
-            val isLoading = pagedVendors.isEmpty() && (user1Prefs.isNotEmpty() || user2Prefs.isNotEmpty()) && totalResults == 0 // Basic loading heuristic
-
             if (isLoading && searchQuery.isBlank()) { // Show loading only if not actively searching an empty list
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
