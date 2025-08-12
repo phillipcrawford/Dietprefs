@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dietprefs.model.Preference
+import com.example.dietprefs.ui.theme.backgroundGrey
 import com.example.dietprefs.ui.theme.dietprefsGrey
 import com.example.dietprefs.ui.theme.dietprefsTeal
 import com.example.dietprefs.ui.theme.selectedGrey
@@ -92,7 +93,7 @@ fun PreferenceScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFF2C2C2C))
+                .background(backgroundGrey)
                 .padding(0.dp, 4.dp)
         ) {
             Column(
