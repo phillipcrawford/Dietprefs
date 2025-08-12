@@ -15,7 +15,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -100,6 +100,12 @@ fun SearchResultsScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+            // Visual separator between top bar and table header
+            HorizontalDivider(
+                thickness = 4.dp,
+                color = Color.Black
+            )
+            
             // --- Sortable Table Header ---
             Row(
                 modifier = Modifier
@@ -192,7 +198,7 @@ fun SearchResultsScreen(
                     }
                 }
             }
-            Divider()
+            HorizontalDivider()
 
             // --- Results List or Empty/Loading State ---
             if (isLoading && searchQuery.isBlank()) { // Show loading only if not actively searching an empty list
@@ -272,7 +278,7 @@ fun SearchResultsScreen(
                                 }
                             }
                         }
-                        Divider()
+                        HorizontalDivider()
 
                         // Pagination Trigger
                         if (index >= pagedVendors.size - 3 && pagedVendors.size < totalResults) {
