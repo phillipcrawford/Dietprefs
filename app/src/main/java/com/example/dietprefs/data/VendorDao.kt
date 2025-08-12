@@ -17,8 +17,4 @@ interface VendorDao {
     @Transaction
     @Query("SELECT * FROM vendors")
     suspend fun getVendorsWithItems(): List<VendorWithItems>
-
-    @Transaction
-    @Query("SELECT * FROM vendors WHERE name = :vendorName LIMIT 1")
-    suspend fun getVendorWithItemsByName(vendorName: String): VendorWithItems?
 }
