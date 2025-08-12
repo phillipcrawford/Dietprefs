@@ -431,6 +431,7 @@ fun SortableHeader(
             Icon(
                 imageVector = if (currentSortState.direction == SortDirection.ASCENDING) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
                 contentDescription = "Sort Direction: ${currentSortState.direction}",
+                tint = Color.White,
                 modifier = Modifier.size(16.dp)
             )
         } else {
