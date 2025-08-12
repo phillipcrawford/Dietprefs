@@ -36,6 +36,7 @@ import androidx.navigation.NavController
 import com.example.dietprefs.model.Preference
 import com.example.dietprefs.model.SortColumn
 import com.example.dietprefs.model.SortDirection
+import com.example.dietprefs.ui.theme.backgroundGrey
 import com.example.dietprefs.ui.theme.dietprefsGrey
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
@@ -103,7 +104,7 @@ fun SearchResultsScreen(
             // Visual separator between top bar and table header
             HorizontalDivider(
                 thickness = 4.dp,
-                color = Color.Black
+                color = backgroundGrey
             )
             
             // --- Sortable Table Header ---
