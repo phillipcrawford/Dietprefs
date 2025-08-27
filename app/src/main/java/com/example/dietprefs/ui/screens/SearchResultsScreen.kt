@@ -403,7 +403,7 @@ private fun PreferenceDisplayRow(
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             prefs.joinToString(", ") { it.display },
-            fontSize = 15.sp, // Adjusted size
+            fontSize = 16.sp, // Adjusted size
             fontWeight = FontWeight.Medium, // Adjusted weight
             color = userColor,
             maxLines = maxLines,
