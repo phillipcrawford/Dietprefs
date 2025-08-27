@@ -333,7 +333,7 @@ fun SearchResultsScreen(
 }
 
 @Composable
-fun SearchResultsTopBar( // Your existing TopBar, slightly adapted for imports
+fun SearchResultsTopBar(
     user1Prefs: Set<Preference>,
     user2Prefs: Set<Preference>,
     navController: NavController,
@@ -341,76 +341,113 @@ fun SearchResultsTopBar( // Your existing TopBar, slightly adapted for imports
 ) {
     val coroutineScope = rememberCoroutineScope()
     var isBackEnabled by remember { mutableStateOf(true) }
+    
+    val user1Selected = user1Prefs.map { it.display }
+    val user2Selected = user2Prefs.map { it.display }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(128.dp) // Consider adjusting height or making it dynamic
+            .height(128.dp)
             .background(dietprefsGrey)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
+        // Back button positioned on the left
         IconButton(
             onClick = {
                 if (isBackEnabled) {
-                    isBackEnabled = false // Prevent double taps
+                    isBackEnabled = false
                     navController.popBackStack()
-                    coroutineScope.launch { // Add delay for smoother transition if needed
-                        delay(300) // Optional delay
+                    coroutineScope.launch {
+                        delay(300)
                         isBackEnabled = true
                     }
                 }
             },
-            modifier = Modifier.align(Alignment.CenterStart)
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .offset(x = (-16).dp) // Move left to reduce padding
+                .size(48.dp) // Lock in current size
         ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            Icon(
+                imageVector = Icons.Default.ArrowBack, 
+                contentDescription = "Back", 
+                tint = Color.White,
+                modifier = Modifier.size(24.dp) // Standard icon size within the button
+            )
         }
 
+        // Preferences display using similar styling to PreferencesTopBar
         Column(
             modifier = Modifier
-                .align(Alignment.Center)
-                .fillMaxWidth(0.7f), // Adjusted width
-            verticalArrangement = Arrangement.spacedBy(2.dp), // Reduced spacing
-            horizontalAlignment = Alignment.Start
+                .align(Alignment.CenterStart)
+                .fillMaxWidth(0.85f)
+                .padding(start = 16.dp), // Reduced space for back button
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            if (user1Prefs.isNotEmpty()) {
-                PreferenceDisplayRow(prefs = user1Prefs, userColor = user1Red, icon = Icons.Default.Person, maxLines = if (user2Prefs.isEmpty()) 3 else 2)
+            if (user1Selected.isNotEmpty()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "User 1",
+                            tint = user1Red
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = user1Selected.joinToString(", "),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = user1Red,
+                        maxLines = if (user2Selected.isEmpty()) 4 else 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
             }
-            if (user2Prefs.isNotEmpty()) {
-                PreferenceDisplayRow(prefs = user2Prefs, userColor = user2Magenta, icon = Icons.Default.Person, maxLines = if (user1Prefs.isEmpty()) 3 else 2)
+
+            if (user2Selected.isNotEmpty()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "User 2",
+                            tint = user2Magenta
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = user2Selected.joinToString(", "),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = user2Magenta,
+                        maxLines = if (user1Selected.isEmpty()) 4 else 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
             }
         }
 
-        IconButton(onClick = onSettingsClick, modifier = Modifier.align(Alignment.CenterEnd)) {
-            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White, modifier = Modifier.size(30.dp))
+        IconButton(
+            onClick = onSettingsClick,
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = Color.White,
+                modifier = Modifier.size(32.dp)
+            )
         }
     }
 }
 
-@Composable
-private fun PreferenceDisplayRow(
-    prefs: Set<Preference>,
-    userColor: Color,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    maxLines: Int
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = icon,
-            contentDescription = "User Preferences",
-            tint = userColor,
-            modifier = Modifier.size(18.dp) // Adjusted size
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            prefs.joinToString(", ") { it.display },
-            fontSize = 16.sp, // Adjusted size
-            fontWeight = FontWeight.Medium, // Adjusted weight
-            color = userColor,
-            maxLines = maxLines,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis // Handle overflow
-        )
-    }
-}
 
 
 @Composable

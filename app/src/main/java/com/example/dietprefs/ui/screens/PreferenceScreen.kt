@@ -270,19 +270,23 @@ fun PreferencesTopBar(
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .fillMaxWidth(0.85f),
+                    .fillMaxWidth(0.85f)
+                    .padding(start = 16.dp), // Match SearchResultsScreen positioning
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 if (user1Selected.isNotEmpty()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onUserModeClick) {
+                        Box(
+                            modifier = Modifier.padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "User 1",
                                 tint = user1Red
                             )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = user1Selected.joinToString(", "),
                             fontSize = 20.sp,
@@ -296,14 +300,17 @@ fun PreferencesTopBar(
 
                 if (user2Selected.isNotEmpty()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onUserModeClick) {
+                        Box(
+                            modifier = Modifier.padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "User 2",
                                 tint = user2Magenta
                             )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = user2Selected.joinToString(", "),
                             fontSize = 20.sp,
