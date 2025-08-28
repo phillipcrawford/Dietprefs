@@ -35,6 +35,7 @@ class SharedViewModel : ViewModel() {
     private var currentPage = 0
     private val pageSize = 10
 
+    // --- SORTING STATE --- (UNCOMMENTED)
     private val _sortState = MutableStateFlow(SortState()) // Default sort from SortType.kt
     val sortState: StateFlow<SortState> = _sortState.asStateFlow()
 
@@ -47,7 +48,6 @@ class SharedViewModel : ViewModel() {
         _visibleRange.value = start to end
     }
 
-    // ... (toggleUser1Pref, toggleUser2Pref, clearPrefs remain the same) ...
     fun toggleUser1Pref(pref: Preference) {
         val currentPrefs = _user1Prefs.value.toMutableSet()
         if (pref in currentPrefs) {
