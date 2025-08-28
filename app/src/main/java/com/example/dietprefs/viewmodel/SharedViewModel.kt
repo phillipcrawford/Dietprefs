@@ -35,7 +35,6 @@ class SharedViewModel : ViewModel() {
     private var currentPage = 0
     private val pageSize = 10
 
-    // --- SORTING STATE --- (UNCOMMENTED)
     private val _sortState = MutableStateFlow(SortState()) // Default sort from SortType.kt
     val sortState: StateFlow<SortState> = _sortState.asStateFlow()
 
