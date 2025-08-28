@@ -75,7 +75,6 @@ class SharedViewModel : ViewModel() {
     fun clearPrefs() {
         _user1Prefs.value = emptySet()
         _user2Prefs.value = emptySet()
-        // Similar to toggleUser1Pref, results should re-compute
     }
 
 
