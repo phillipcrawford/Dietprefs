@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class SharedViewModel : ViewModel() {
-
-    // ... (user1Prefs, user2Prefs remain the same) ...
     private val _user1Prefs = MutableStateFlow<Set<Preference>>(emptySet())
     val user1Prefs: StateFlow<Set<Preference>> = _user1Prefs.asStateFlow()
 
