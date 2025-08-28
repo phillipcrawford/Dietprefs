@@ -13,7 +13,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Only one instance of SharedViewModel tied to this Activity
         val sharedViewModel: SharedViewModel by viewModels()
 
         setContent {
