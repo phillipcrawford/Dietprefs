@@ -69,7 +69,6 @@ class SharedViewModel : ViewModel() {
             currentPrefs.add(pref)
         }
         _user2Prefs.value = currentPrefs
-        // Similar to toggleUser1Pref, results should re-compute
     }
 
     fun clearPrefs() {
