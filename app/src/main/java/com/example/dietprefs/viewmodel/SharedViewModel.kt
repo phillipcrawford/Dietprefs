@@ -57,7 +57,7 @@ class SharedViewModel : ViewModel() {
         }
         _user1Prefs.value = currentPrefs
         // Re-calculate results when preferences change
-        // You'll need access to the db instance here, or trigger it from where db is available
+        // You'll need access sto the db instance here, or trigger it from where db is available
         // For now, assuming loadAndComputeResults will be called externally after pref change
     }
 
