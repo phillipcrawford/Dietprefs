@@ -116,7 +116,7 @@ fun SearchResultsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(dietprefsGrey) // Light grey background for header
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(vertical = 8.dp)
                     .defaultMinSize(minHeight = if (isTwoUserMode) 56.dp else Dp.Unspecified),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -124,6 +124,7 @@ fun SearchResultsScreen(
                 Column(
                     modifier = Modifier
                         .weight(2f)
+                        .padding(start = 16.dp)
                         .clickable { sharedViewModel.updateSortState(SortColumn.VENDOR_RATING) }
                 ) {
                     SortableHeader(
@@ -234,7 +235,6 @@ fun SearchResultsScreen(
                             Box(
                                 modifier = Modifier
                                     .weight(2f) // This Box takes up 2/4 of the available width
-                                    .padding(end = 8.dp)
                                     .drawBehind {
                                         // Calculate the split point based on rating ratio
                                         val ratingRatio = vendor.querySpecificRatingValue.coerceIn(0f, 1f)
@@ -273,17 +273,20 @@ fun SearchResultsScreen(
                                     color = Color.Gray,
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
-                                        .padding(top = 10.dp, bottom = 10.dp)
+                                        .padding(end = 16.dp, top = 10.dp, bottom = 10.dp)
                                 )
                             }
 
                             // Distance
-                            Text(
-                                String.format("%.1f mi", vendor.distanceMiles),
+                            Box(
                                 modifier = Modifier.weight(1f),
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center
-                            )
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    String.format("%.1f mi", vendor.distanceMiles),
+                                    fontSize = 14.sp
+                                )
+                            }
 
                             // Menu Item Counts (adapts to user mode)
                             Column(
