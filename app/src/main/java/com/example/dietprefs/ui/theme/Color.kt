@@ -21,3 +21,6 @@ val user2Magenta = Color(0xFFE0B3FF)
 val user2Color = Color(0xFFFF77FF)
 val dietprefsTeal = Color(0xFF004D4D)
 val selectedTeal = Color(0xFF008080)
+
+// Rating background colors
+val upvoteGreen = Color(0xFF416831)       // Green for upvotes section

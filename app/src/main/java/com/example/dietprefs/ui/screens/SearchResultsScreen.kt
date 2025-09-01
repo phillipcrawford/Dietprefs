@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -38,6 +41,7 @@ import com.example.dietprefs.model.SortColumn
 import com.example.dietprefs.model.SortDirection
 import com.example.dietprefs.ui.theme.backgroundGrey
 import com.example.dietprefs.ui.theme.dietprefsGrey
+import com.example.dietprefs.ui.theme.upvoteGreen
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
 import com.example.dietprefs.viewmodel.SharedViewModel
@@ -223,8 +227,7 @@ fun SearchResultsScreen(
                     ) { index, vendor ->
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 10.dp), // Slightly reduced vertical padding
+                                .fillMaxWidth(),
                             verticalAlignment = Alignment.Top // Align to top for multi-line text
                         ) {
                             // Vendor Name and Rating
@@ -232,6 +235,25 @@ fun SearchResultsScreen(
                                 modifier = Modifier
                                     .weight(2f) // This Box takes up 2/4 of the available width
                                     .padding(end = 8.dp)
+                                    .drawBehind {
+                                        // Calculate the split point based on rating ratio
+                                        val ratingRatio = vendor.querySpecificRatingValue.coerceIn(0f, 1f)
+                                        val greenWidth = size.width * ratingRatio
+                                        
+                                        // Draw green section (upvotes)
+                                        drawRect(
+                                            color = upvoteGreen,
+                                            topLeft = Offset.Zero,
+                                            size = Size(greenWidth, size.height)
+                                        )
+                                        
+                                        // Draw grey section (remaining votes)
+                                        drawRect(
+                                            color = dietprefsGrey,
+                                            topLeft = Offset(greenWidth, 0f),
+                                            size = Size(size.width - greenWidth, size.height)
+                                        )
+                                    }
                                 // .height(IntrinsicSize.Min) // Optional: If you need to ensure Box wraps content height
                             ) {
                                 // Vendor Name - Aligned to TopStart (default for Box content, but explicit is fine)
@@ -239,7 +261,9 @@ fun SearchResultsScreen(
                                     text = vendor.vendorName,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
-                                    modifier = Modifier.align(Alignment.TopStart)
+                                    modifier = Modifier
+                                        .align(Alignment.TopStart)
+                                        .padding(start = 16.dp, top = 10.dp, bottom = 10.dp)
                                 )
 
                                 // Rating String - Aligned to TopEnd (Top Right)
@@ -247,7 +271,9 @@ fun SearchResultsScreen(
                                     text = "Rating: ${vendor.querySpecificRatingString}",
                                     fontSize = 13.sp,
                                     color = Color.Gray,
-                                    modifier = Modifier.align(Alignment.TopEnd) // <<< ALIGN TO TOP END
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(top = 10.dp, bottom = 10.dp)
                                 )
                             }
 
