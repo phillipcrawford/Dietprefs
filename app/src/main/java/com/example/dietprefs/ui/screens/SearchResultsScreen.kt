@@ -124,13 +124,13 @@ fun SearchResultsScreen(
                 Column(
                     modifier = Modifier
                         .weight(2f)
-                        .padding(start = 16.dp)
                         .clickable { sharedViewModel.updateSortState(SortColumn.VENDOR_RATING) }
                 ) {
                     SortableHeader(
                         text = "Vendor",
                         column = SortColumn.VENDOR_RATING,
-                        currentSortState = sortState
+                        currentSortState = sortState,
+                        modifier = Modifier.padding(start = 16.dp)
                     )
                     if (totalResults > 0) {
                         Text(
