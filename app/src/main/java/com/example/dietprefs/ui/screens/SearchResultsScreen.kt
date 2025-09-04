@@ -139,7 +139,7 @@ fun SearchResultsScreen(
                             fontSize = 11.sp, // Slightly smaller
                             color = Color.White,
                             modifier = Modifier
-                                .padding(top = 243.dp)
+                                .padding(top = 2.dp)
                                 .align(Alignment.End)
                         )
                     } else {
