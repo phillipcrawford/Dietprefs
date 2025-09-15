@@ -228,7 +228,8 @@ fun SearchResultsScreen(
                     ) { index, vendor ->
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .height(48.dp),
                             verticalAlignment = Alignment.Top // Align to top for multi-line text
                         ) {
                             // Vendor Name and Rating
