@@ -219,7 +219,10 @@ fun SearchResultsScreen(
                     )
                 }
             } else {
-                LazyColumn(modifier = Modifier.weight(1f), state = listState) {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    state = listState
+                ) {
                     itemsIndexed(
                         items = pagedVendors.filter {
                             it.vendorName.contains(searchQuery, ignoreCase = true)
@@ -313,7 +316,10 @@ fun SearchResultsScreen(
                                 }
                             }
                         }
-                        HorizontalDivider()
+                        HorizontalDivider(
+                            thickness = 2.dp,
+                            color = backgroundGrey
+                        )
 
                         // Pagination Trigger
                         if (index >= pagedVendors.size - 3 && pagedVendors.size < totalResults) {
