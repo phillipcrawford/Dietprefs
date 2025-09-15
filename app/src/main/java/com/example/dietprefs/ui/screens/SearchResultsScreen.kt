@@ -204,7 +204,10 @@ fun SearchResultsScreen(
                     }
                 }
             }
-            HorizontalDivider()
+            HorizontalDivider(
+                thickness = 2.dp,
+                color = backgroundGrey
+            )
 
             // --- Results List or Empty/Loading State ---
             if (isLoading && searchQuery.isBlank()) { // Show loading only if not actively searching an empty list
