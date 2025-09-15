@@ -279,7 +279,9 @@ fun SearchResultsScreen(
 
                             // Distance
                             Box(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(dietprefsGrey),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
