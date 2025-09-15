@@ -112,95 +112,192 @@ fun SearchResultsScreen(
             )
             
             // --- Sortable Table Header ---
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(dietprefsGrey) // Light grey background for header
-                    .padding(vertical = 8.dp)
-                    .defaultMinSize(minHeight = if (isTwoUserMode) 56.dp else Dp.Unspecified),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Vendor Header (includes rating string and result count)
+            if (isTwoUserMode) {
+                // Two-user mode: Two rows with explicit alignment
                 Column(
                     modifier = Modifier
-                        .weight(2f)
-                        .clickable { sharedViewModel.updateSortState(SortColumn.VENDOR_RATING) }
+                        .fillMaxWidth()
+                        .background(dietprefsGrey)
+                        .padding(vertical = 8.dp)
                 ) {
-                    SortableHeader(
-                        text = "Vendor",
-                        column = SortColumn.VENDOR_RATING,
-                        currentSortState = sortState,
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
-                    if (totalResults > 0) {
-                        Text(
-                            text = "${visibleRange.first}–${visibleRange.second} of $totalResults",
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 11.sp, // Slightly smaller
-                            color = Color.White,
+                    // First row: Main headers aligned
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Vendor Header
+                        Box(
                             modifier = Modifier
-                                .padding(top = 2.dp)
-                                .align(Alignment.End)
-                        )
-                    } else {
-                        Text( // Placeholder if no results yet, or show "0 results"
-                            text = if (searchQuery.isNotBlank() || user1Prefs.isNotEmpty() || user2Prefs.isNotEmpty()) "0 results" else "Loading...",
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 11.sp,
-                            color = Color.White,
-                            modifier = Modifier
-                                .padding(top = 2.dp)
-                                .align(Alignment.End)
-                        )
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { sharedViewModel.updateSortState(SortColumn.DISTANCE) },
-                    //.fillMaxHeight(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    SortableHeader(
-                        text = "Dist",
-                        column = SortColumn.DISTANCE,
-                        currentSortState = sortState,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                // Menu Items Header (adapts to user mode)
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { sharedViewModel.updateSortState(SortColumn.MENU_ITEMS) },
-                    //.fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    SortableHeader(
-                        text = "Menu Items",
-                        column = SortColumn.MENU_ITEMS,
-                        currentSortState = sortState,
-                        textAlign = TextAlign.Center
-                    )
-                    if (isTwoUserMode) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Row {
-                            Icon(
-                                imageVector = Icons.Filled.Person,
-                                contentDescription = "User 1 Items",
-                                tint = user1Red,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Filled.Person,
-                                contentDescription = "User 2 Items",
-                                tint = user2Magenta,
-                                modifier = Modifier.size(14.dp)
+                                .weight(2f)
+                                .clickable { sharedViewModel.updateSortState(SortColumn.VENDOR_RATING) }
+                        ) {
+                            SortableHeader(
+                                text = "Vendor",
+                                column = SortColumn.VENDOR_RATING,
+                                currentSortState = sortState,
+                                modifier = Modifier.padding(start = 16.dp)
                             )
                         }
+
+                        // Distance Header
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { sharedViewModel.updateSortState(SortColumn.DISTANCE) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            SortableHeader(
+                                text = "Dist",
+                                column = SortColumn.DISTANCE,
+                                currentSortState = sortState,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        // Menu Items Header
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { sharedViewModel.updateSortState(SortColumn.MENU_ITEMS) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            SortableHeader(
+                                text = "Menu Items",
+                                column = SortColumn.MENU_ITEMS,
+                                currentSortState = sortState,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Second row: Result count aligned with person icons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Result count text
+                        Box(
+                            modifier = Modifier.weight(2f),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            if (totalResults > 0) {
+                                Text(
+                                    text = "${visibleRange.first}–${visibleRange.second} of $totalResults",
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 11.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(end = 16.dp)
+                                )
+                            } else {
+                                Text(
+                                    text = if (searchQuery.isNotBlank() || user1Prefs.isNotEmpty() || user2Prefs.isNotEmpty()) "0 results" else "Loading...",
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 11.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(end = 16.dp)
+                                )
+                            }
+                        }
+
+                        // Empty space for distance column
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        // Person icons
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row {
+                                Icon(
+                                    imageVector = Icons.Filled.Person,
+                                    contentDescription = "User 1 Items",
+                                    tint = user1Red,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Filled.Person,
+                                    contentDescription = "User 2 Items",
+                                    tint = user2Magenta,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Single-user mode: All on same baseline
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(dietprefsGrey)
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Vendor Header with result count on same line
+                    Row(
+                        modifier = Modifier
+                            .weight(2f)
+                            .clickable { sharedViewModel.updateSortState(SortColumn.VENDOR_RATING) },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SortableHeader(
+                            text = "Vendor",
+                            column = SortColumn.VENDOR_RATING,
+                            currentSortState = sortState,
+                            modifier = Modifier.padding(start = 16.dp)
+                        )
+
+                        if (totalResults > 0) {
+                            Text(
+                                text = "${visibleRange.first}–${visibleRange.second} of $totalResults",
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 11.sp,
+                                color = Color.White,
+                                modifier = Modifier.padding(end = 16.dp)
+                            )
+                        } else {
+                            Text(
+                                text = if (searchQuery.isNotBlank() || user1Prefs.isNotEmpty() || user2Prefs.isNotEmpty()) "0 results" else "Loading...",
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 11.sp,
+                                color = Color.White,
+                                modifier = Modifier.padding(end = 16.dp)
+                            )
+                        }
+                    }
+
+                    // Distance Header
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { sharedViewModel.updateSortState(SortColumn.DISTANCE) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        SortableHeader(
+                            text = "Dist",
+                            column = SortColumn.DISTANCE,
+                            currentSortState = sortState,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    // Menu Items Header
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { sharedViewModel.updateSortState(SortColumn.MENU_ITEMS) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        SortableHeader(
+                            text = "Menu Items",
+                            column = SortColumn.MENU_ITEMS,
+                            currentSortState = sortState,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
