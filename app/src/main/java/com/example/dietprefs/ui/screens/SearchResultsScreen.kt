@@ -281,6 +281,7 @@ fun SearchResultsScreen(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
+                                    .fillMaxHeight()
                                     .background(dietprefsGrey),
                                 contentAlignment = Alignment.Center
                             ) {
