@@ -236,6 +236,7 @@ fun SearchResultsScreen(
                             Box(
                                 modifier = Modifier
                                     .weight(2f) // This Box takes up 2/4 of the available width
+                                    .fillMaxHeight()
                                     .drawBehind {
                                         // Calculate the split point based on rating ratio
                                         val ratingRatio = vendor.querySpecificRatingValue.coerceIn(0f, 1f)
