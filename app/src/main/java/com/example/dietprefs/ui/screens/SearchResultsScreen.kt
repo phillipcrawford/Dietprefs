@@ -170,7 +170,7 @@ fun SearchResultsScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
 
                     // Second row: Result count aligned with person icons
                     Row(
