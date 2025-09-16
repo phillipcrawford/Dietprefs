@@ -132,7 +132,7 @@ fun SearchResultsScreen(
                                 .clickable { sharedViewModel.updateSortState(SortColumn.VENDOR_RATING) }
                         ) {
                             SortableHeader(
-                                text = "Vendor",
+                                text = "Vendors",
                                 column = SortColumn.VENDOR_RATING,
                                 currentSortState = sortState,
                                 modifier = Modifier.padding(start = 16.dp)
@@ -147,7 +147,7 @@ fun SearchResultsScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             SortableHeader(
-                                text = "Dist",
+                                text = "Distance",
                                 column = SortColumn.DISTANCE,
                                 currentSortState = sortState,
                                 textAlign = TextAlign.Center
@@ -169,8 +169,6 @@ fun SearchResultsScreen(
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(2.dp))
 
                     // Second row: Result count aligned with person icons
                     Row(
@@ -214,14 +212,14 @@ fun SearchResultsScreen(
                                     imageVector = Icons.Filled.Person,
                                     contentDescription = "User 1 Items",
                                     tint = user1Red,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Icon(
                                     imageVector = Icons.Filled.Person,
                                     contentDescription = "User 2 Items",
                                     tint = user2Magenta,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
@@ -606,7 +604,7 @@ fun SortableHeader(
         Text(
             text = text,
             fontWeight = FontWeight.Bold, // Header text is bold
-            fontSize = 14.sp,             // Adjusted font size
+            fontSize = 16.sp,             // Adjusted font size
             color = Color.White,
             textAlign = textAlign ?: TextAlign.Start // Allow specifying text alignment
         )
