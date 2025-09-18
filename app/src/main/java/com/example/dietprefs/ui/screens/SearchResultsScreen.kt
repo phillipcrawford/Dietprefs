@@ -390,7 +390,8 @@ fun SearchResultsScreen(
                             ) {
                                 Text(
                                     String.format("%.1f mi", vendor.distanceMiles),
-                                    fontSize = 14.sp
+                                    fontSize = 14.sp,
+                                    color = Color.White
                                 )
                             }
 
