@@ -1,25 +1,42 @@
 # Dietprefs - Food Vendor & Restaurant Discovery App
 
 ## Overview
-Android app for discovering food vendors and restaurants based on dietary preferences and restrictions. Helps users find food that matches their specific dietary needs with filtering, rating, and sorting capabilities.
+Multi-platform food vendor & restaurant discovery application for **Android, iOS, and Web**. Helps users find food that matches their specific dietary needs with filtering, rating, and sorting capabilities. All platforms share a common backend API and database.
 
 ## Architecture
+
+**⚠️ MIGRATION IN PROGRESS**: Transitioning from Android-only (Room) to multi-platform (Backend API).
+
+See **[architecture.md](./architecture.md)** for complete technical specifications.
+
+### Current Target Architecture
+- **Backend**: Python FastAPI + PostgreSQL (shared across all platforms)
+- **Android Client**: Jetpack Compose + Retrofit (MVVM pattern)
+- **iOS Client**: SwiftUI + URLSession (planned)
+- **Web Client**: React/Vue + REST API (planned)
+- **Database**: PostgreSQL (hosted on Railway/Render)
+- **API**: RESTful JSON endpoints
+
+### Legacy Architecture (Being Phased Out)
 - **Platform**: Android with Jetpack Compose
-- **Database**: Room (local SQLite)
+- **Database**: Room (local SQLite) - **TO BE REMOVED**
 - **Architecture Pattern**: MVVM with SharedViewModel
 - **Navigation**: Jetpack Navigation Compose
 - **Language**: Kotlin
 
 ## Key Data Entities
 
-### VendorEntity (`data/VendorEntity.kt`)
+**Note**: These entities will become API response models. Database schema defined in `architecture.md`.
+
+### Vendor
 Represents restaurants/vendors with:
 - Location data (lat, lng, address, zipcode)
 - Delivery options (delivery, takeout, grubhub, doordash, ubereats, etc.)
 - Business info (name, phone, website, hours, reviews)
 - Custom dietary compliance (`customByNature`)
+- **Currently**: `data/VendorEntity.kt` (Room) → **Future**: API response model
 
-### ItemEntity (`data/ItemEntity.kt`)
+### Item
 Menu items with extensive dietary/allergen flags:
 - **Dietary Preferences**: vegetarian, pescetarian, vegan, keto, organic, gmoFree, locallySourced, raw, kosher, halal
 - **Allergens**: noMilk, noEggs, noFish, noShellfish, noPeanuts, noTreenuts, glutenFree, noSoy, noSesame, noMsg, noAlliums
@@ -27,32 +44,78 @@ Menu items with extensive dietary/allergen flags:
 - **Nutritional**: lowSugar, highProtein, lowCarb
 - **Classification**: entree, sweet
 - **Social**: upvotes, totalVotes for rating system
-- **Media**: pictures (comma-separated filenames)
+- **Media**: pictures (comma-separated URLs)
+- **Currently**: `data/ItemEntity.kt` (Room) → **Future**: API response model
 
 ## Core Functionality
 
-### SharedViewModel (`viewmodel/SharedViewModel.kt`)
-Central state management for:
-- **Dual User Preferences**: Supports two users with independent dietary preference sets
-- **Dynamic Filtering**: Real-time filtering of vendors/items based on selected preferences
-- **Rating System**: Query-specific ratings based on relevant items only
-- **Sorting**: By vendor rating, distance, or menu item count
-- **Pagination**: Load results in pages of 10
-- **State Management**: Uses StateFlow for reactive UI updates
-
-### Key Features
-1. **Multi-User Support**: Two users can set independent dietary preferences
-2. **Smart Filtering**: Vendors shown only if they have items matching active preferences
+### Key Features (Platform-Agnostic)
+1. **Dual-User Support**: Two users can set independent dietary preferences
+2. **Smart Filtering**: Vendors shown only if they have items matching ALL active preferences (AND logic)
 3. **Context-Aware Ratings**: Ratings calculated only from items relevant to current query
-4. **Distance Calculation**: Location-based vendor sorting (placeholder implementation)
-5. **Comprehensive Dietary Support**: 25+ dietary flags covering allergies, preferences, and restrictions
+4. **Dynamic Sorting**: By vendor rating, distance, or menu item count
+5. **Pagination**: Results loaded in pages of 10
+6. **Distance Calculation**: Location-based vendor sorting using Haversine formula
+7. **Comprehensive Dietary Support**: 33 dietary preferences covering allergies, restrictions, and preferences
+
+### Backend Responsibilities (Future)
+- Filter vendors by dietary preferences (complex AND logic)
+- Calculate context-aware ratings
+- Sort results (rating, distance, item count)
+- Paginate responses
+- Distance calculations from user location
+
+### Android Client Responsibilities (Current & Future)
+- **SharedViewModel** (`viewmodel/SharedViewModel.kt`): State management using StateFlow
+  - Manage user preference selections (User 1 and User 2)
+  - Call backend API for vendor search
+  - Handle loading/error states
+  - Cache results for offline viewing (optional)
+- **UI Layer**: Jetpack Compose screens (PreferenceScreen, SearchResultsScreen)
+- **Navigation**: Jetpack Navigation Compose
 
 ## Current State
-- Basic data models and ViewModel implemented
-- Room database schema defined
-- Pagination system with StateFlow
-- Extensive logging for debugging preference matching
-- UI screens for preferences and search results (basic implementation)
+
+### ✅ Completed
+
+**Backend (FastAPI + PostgreSQL)**:
+- Complete REST API with all endpoints (see `BACKEND_SUMMARY.md`)
+- Vendor search with dual-user preference filtering
+- Context-aware rating calculations
+- Distance calculations (Haversine formula)
+- Sorting and pagination
+- Database models with 33 dietary flags
+- Seed data script (20 vendors × 7 items)
+- Deployment documentation for Railway/Render/Heroku
+- Ready for production deployment
+
+**Android (Jetpack Compose + Room)**:
+- Preference selection UI with dual-user mode
+- Search results screen with sortable columns
+- Vendor list with visual rating bars
+- Pagination UI with lazy loading
+- Color-coded user preferences (red/magenta)
+- **Note**: Currently uses Room database (to be replaced with API calls)
+
+### 🚧 Next Phase: Android Migration to Backend API
+
+**Priority Tasks**:
+1. Remove Room database from Android app
+2. Add Retrofit networking layer
+3. Create repository pattern for API calls
+4. Update SharedViewModel to call backend API
+5. Test end-to-end with deployed backend
+
+See Phase 2 in "Migration Roadmap" section below.
+
+### ❌ Not Yet Implemented
+- Android networking layer (Retrofit)
+- Welcome/onboarding screen (Wireframe 1)
+- Restaurant detail screen (Wireframe 4)
+- Photo voting system (Tinder-style)
+- External integrations (Grubhub, Yelp, etc.)
+- iOS client (SwiftUI)
+- Web client (React/Vue)
 
 ## Wireframes & Target Design
 
@@ -85,13 +148,90 @@ Located in `/wireframes/` directory:
 
 ### Implementation Status vs Wireframes
 ✅ **Completed**: Multi-user preferences, results filtering, sorting, dual counts
-🚧 **In Progress**: Search functionality (placeholder), filter tags
+🚧 **In Progress**: Backend API development, Android migration to Retrofit
 ❌ **Missing**: Welcome screen, restaurant detail screen, photo voting, external integrations
 
+---
+
+## Migration Roadmap
+
+### Phase 1: Backend Development (Current Priority)
+See `architecture.md` for detailed implementation plan.
+
+**Goals**:
+1. Set up Python FastAPI + PostgreSQL backend
+2. Implement `POST /api/vendors/search` endpoint
+3. Implement `GET /api/vendors/{id}` and `GET /api/vendors/{id}/items` endpoints
+4. Deploy to Railway/Render
+5. Seed database with test data (20 vendors × 7 items)
+
+### Phase 2: Android Migration
+**Goals**:
+1. Remove Room database (`AppDatabase.kt`, `VendorDao.kt`)
+2. Add Retrofit networking layer
+3. Create Repository pattern for API calls
+4. Update SharedViewModel to call API instead of Room
+5. Test end-to-end with real backend
+
+### Phase 3: Feature Completion
+**Goals**:
+1. Welcome/onboarding screen (Wireframe 1)
+2. Restaurant detail screen (Wireframe 4)
+3. Photo voting system (Tinder-style swipe)
+4. External integrations (Grubhub, Yelp, etc.)
+
+### Phase 4: iOS & Web Clients
+**Goals**:
+1. iOS app (SwiftUI + URLSession)
+2. Web app (React/Vue)
+3. All clients use shared backend API
+
+---
+
+## Development Guidelines
+
+### Code Organization
+- **Keep wireframes as UI reference**: All UI decisions should match wireframe designs
+- **Platform-agnostic logic goes in backend**: Filtering, sorting, rating calculations
+- **Client handles UI state only**: Preference selection, navigation, display logic
+- **Use repository pattern**: Separate API calls from ViewModel logic
+
+### Testing Strategy
+- **Backend**: Unit tests for filtering logic, integration tests for endpoints
+- **Android**: UI tests for preference selection → search flow
+- **Mock API responses** for offline Android development
+
+### Naming Conventions
+- Preference names: lowercase with underscores (e.g., `gluten_free`, `no_peanuts`)
+- API endpoints: RESTful naming (`/api/vendors/search`, not `/api/searchVendors`)
+- Database tables: lowercase plural (`vendors`, `items`)
+
+---
+
 ## Recent Work Context
-- Focus on preference filtering logic and debugging
-- Rating system based on relevant items only
-- Multi-user preference handling with StateFlow
-- Performance optimization for large vendor datasets
+
+### 2025-10-01: Backend Complete ✅
+- **Architecture Planning**:
+  - Created `architecture.md` with complete multi-platform specifications
+  - Updated `CLAUDE.md` to reflect backend-first strategy
+  - Decided on Python FastAPI + PostgreSQL + Railway stack
+
+- **Backend Implementation** (Complete):
+  - Built complete FastAPI REST API (`dietprefs-backend/`)
+  - Implemented all 4 API endpoints with full functionality
+  - Created SQLAlchemy models (Vendor + Item with 33 dietary flags)
+  - Implemented complex filtering logic with AND logic in `VendorService`
+  - Context-aware rating calculations
+  - Haversine distance calculations
+  - Sorting (rating/distance/item_count) and pagination
+  - Database seeding script (20 vendors × 7 items = 140 items)
+  - Created comprehensive deployment docs (Railway/Render/Heroku)
+  - Ready for production deployment
+
+- **Rollback Point**: Commit `12032ae` ("distance text to white") - last commit before backend work
+
+### Previous Work (Android)
+- Implemented preference filtering logic with AND logic
+- Built rating system based on query-relevant items only
+- Created dual-user preference handling with StateFlow
 - Fixed infinite loading spinner and empty state handling
-- Removed dead code and unused parameters
