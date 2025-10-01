@@ -313,4 +313,4 @@ After backend is deployed:
 3. Test API endpoints from Android app
 4. Monitor logs for any issues
 
-See [architecture.md](../architecture.md) for more details on the overall system architecture.
+See [architecture.md](../docs/architecture.md) for more details on the overall system architecture.

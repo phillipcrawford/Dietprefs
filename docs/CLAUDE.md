@@ -7,7 +7,7 @@ Multi-platform food vendor & restaurant discovery application for **Android, iOS
 
 **⚠️ MIGRATION IN PROGRESS**: Transitioning from Android-only (Room) to multi-platform (Backend API).
 
-See **[architecture.md](./architecture.md)** for complete technical specifications.
+See **[architecture.md](architecture.md)** for complete technical specifications.
 
 ### Current Target Architecture
 - **Backend**: Python FastAPI + PostgreSQL (shared across all platforms)
@@ -120,7 +120,7 @@ See Phase 2 in "Migration Roadmap" section below.
 ## Wireframes & Target Design
 
 ### Wireframe Files
-Located in `/wireframes/` directory:
+Located in `docs/wireframes/` directory:
 - `Dietprefs (1 First Load Demo Video).png` - Complete user flow from welcome to results
 - `Dietprefs (2 Single Person Mode).png` - Single user flow and settings screen
 - `Dietprefs (3 Multiple Person Mode).png` - Dual user mode with split counts

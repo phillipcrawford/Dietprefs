@@ -227,9 +227,9 @@ Now that the backend is complete, the Android app needs to be updated:
   - Ready for deployment
 
 ### Modified Files (Documentation)
-- `architecture.md` (created)
-- `CLAUDE.md` (updated with multi-platform architecture)
-- `BACKEND_SUMMARY.md` (this file)
+- `docs/architecture.md` (created)
+- `docs/CLAUDE.md` (updated with multi-platform architecture)
+- `docs/BACKEND_SUMMARY.md` (this file)
 
 ### Android Files to Modify (Next Phase)
 - Remove: `AppDatabase.kt`, `VendorDao.kt`, `VendorWithItems.kt`
@@ -267,9 +267,9 @@ All backend work is isolated in `dietprefs-backend/` directory, so it doesn't af
 ## Questions?
 
 See:
-- `dietprefs-backend/README.md` - Quick start guide
-- `dietprefs-backend/DEPLOYMENT.md` - Deployment instructions
-- `architecture.md` - Overall system architecture
-- `CLAUDE.md` - Project context and guidelines
+- `backend/README.md` - Quick start guide
+- `backend/DEPLOYMENT.md` - Deployment instructions
+- `docs/architecture.md` - Overall system architecture
+- `docs/CLAUDE.md` - Project context and guidelines
 
 **Next Action**: Deploy backend to Railway and test API endpoints, then begin Android migration.
