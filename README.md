@@ -64,6 +64,7 @@ cd android
 - Retrofit + OkHttp
 - Repository Pattern
 - StateFlow
+- Google Play Services Location
 
 **Planned**:
 - iOS (SwiftUI)
@@ -73,15 +74,18 @@ cd android
 
 ✅ **Phase 1 Complete**: Backend API deployed and live at https://dietprefs-production.up.railway.app
 ✅ **Phase 2 Complete**: Android app fully migrated to REST API with smart caching
-🚧 **Phase 3 In Progress**: Location services and distance-based filtering
+✅ **Phase 3 Complete**: Location services and 10-mile distance filtering
+🚧 **Phase 4 Next**: Feature completion (welcome screen, restaurant details, photo voting)
 ❌ **iOS and Web clients** not started
 
 **Recent Achievements**:
-- Android app now uses Retrofit to call live backend API
-- Removed all Room database dependencies
-- Implemented client-side caching for instant sorting
-- Fixed UX issues (instant sort, scroll to top, no white flash)
-- Tested with varied backend data
+- Android location services integrated (Google Play Services)
+- 10-mile radius filtering in backend
+- Real distance calculations with Haversine formula
+- Permission request UI with proper callbacks
+- Fixed backend bugs (rating calculation, preference filtering)
+- All dietary preferences working (vegetarian, vegan, halal, etc.)
+- Fast loading with cached location (instant vs 2+ seconds)
 
 See [docs/CLAUDE.md](docs/CLAUDE.md) for detailed status and roadmap.
 

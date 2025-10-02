@@ -101,16 +101,15 @@ class LocationService(private val context: Context) {
             }
 
             val location: Location? = fusedLocationClient.lastLocation.await()
-            location?.let {
-                UserLocation(
-                    latitude = it.latitude,
-                    longitude = it.longitude
-                )
-            } ?: run {
-                // No cached location - return San Francisco for testing in emulator
-                // TODO: Remove this fallback for production
-                UserLocation(latitude = 37.7749, longitude = -122.4194)
-            }
+
+            // TODO: Remove this hardcoded location for production
+            // For emulator testing, always return San Francisco to match test data
+            UserLocation(latitude = 37.7749, longitude = -122.4194)
+
+            // Production code (currently disabled for testing):
+            // location?.let {
+            //     UserLocation(latitude = it.latitude, longitude = it.longitude)
+            // } ?: UserLocation(latitude = 37.7749, longitude = -122.4194)
         } catch (e: SecurityException) {
             // Permission was revoked during execution
             null

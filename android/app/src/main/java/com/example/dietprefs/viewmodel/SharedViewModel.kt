@@ -304,9 +304,9 @@ class SharedViewModel(
             return null
         }
 
-        // Try to get current location (fresh GPS)
-        val location = locationService.getCurrentLocation()
-            ?: locationService.getLastKnownLocation() // Fallback to cached location
+        // Use cached location first (fast), fall back to current (slow) if unavailable
+        val location = locationService.getLastKnownLocation()
+            ?: locationService.getCurrentLocation()
 
         _userLocation.value = location
         return location
