@@ -44,6 +44,7 @@ import com.example.dietprefs.ui.theme.dietprefsGrey
 import com.example.dietprefs.ui.theme.upvoteGreen
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
+import com.example.dietprefs.ui.components.TopBar
 import com.example.dietprefs.viewmodel.SharedViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -98,10 +99,10 @@ fun SearchResultsScreen(
 
     Scaffold(
         topBar = {
-            SearchResultsTopBar( // Using your existing TopBar
+            TopBar(
                 user1Prefs = user1Prefs,
                 user2Prefs = user2Prefs,
-                navController = navController,
+                onBackClick = { navController.popBackStack() },
                 onSettingsClick = onSettingsClick
             )
         }
@@ -482,124 +483,6 @@ fun SearchResultsScreen(
         }
     }
 }
-
-@Composable
-fun SearchResultsTopBar(
-    user1Prefs: Set<Preference>,
-    user2Prefs: Set<Preference>,
-    navController: NavController,
-    onSettingsClick: () -> Unit
-) {
-    val coroutineScope = rememberCoroutineScope()
-    var isBackEnabled by remember { mutableStateOf(true) }
-    
-    val user1Selected = user1Prefs.map { it.display }
-    val user2Selected = user2Prefs.map { it.display }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(128.dp)
-            .background(dietprefsGrey)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        // Back button positioned on the left
-        IconButton(
-            onClick = {
-                if (isBackEnabled) {
-                    isBackEnabled = false
-                    navController.popBackStack()
-                    coroutineScope.launch {
-                        delay(300)
-                        isBackEnabled = true
-                    }
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .offset(x = (-16).dp) // Move left to reduce padding
-                .size(48.dp) // Lock in current size
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack, 
-                contentDescription = "Back", 
-                tint = Color.White,
-                modifier = Modifier.size(24.dp) // Standard icon size within the button
-            )
-        }
-
-        // Preferences display using similar styling to PreferencesTopBar
-        Column(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .fillMaxWidth(0.85f)
-                .padding(start = 16.dp), // Reduced space for back button
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            if (user1Selected.isNotEmpty()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier.padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "User 1",
-                            tint = user1Red
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = user1Selected.joinToString(", "),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = user1Red,
-                        maxLines = if (user2Selected.isEmpty()) 4 else 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            if (user2Selected.isNotEmpty()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier.padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "User 2",
-                            tint = user2Magenta
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = user2Selected.joinToString(", "),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = user2Magenta,
-                        maxLines = if (user1Selected.isEmpty()) 4 else 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-
-        IconButton(
-            onClick = onSettingsClick,
-            modifier = Modifier.align(Alignment.CenterEnd)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Settings",
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
-        }
-    }
-}
-
-
 
 @Composable
 fun SortableHeader(
