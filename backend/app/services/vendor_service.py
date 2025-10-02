@@ -1,5 +1,5 @@
 from typing import List, Optional, Tuple
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import and_, or_
 from app.models.vendor import Vendor
 from app.models.item import Item
@@ -93,6 +93,20 @@ class VendorService:
         return True
 
     @staticmethod
+    def _build_preference_filter(preferences: List[str]):
+        """Build SQL filter for items matching ALL preferences (AND logic)."""
+        if not preferences:
+            return None
+
+        filters = []
+        for pref in preferences:
+            field_name = VendorService.PREFERENCE_FIELD_MAP.get(pref.lower())
+            if field_name:
+                filters.append(getattr(Item, field_name) == True)
+
+        return and_(*filters) if filters else None
+
+    @staticmethod
     def search_vendors(
         db: Session,
         request: VendorSearchRequest
@@ -103,13 +117,44 @@ class VendorService:
         Returns:
             Tuple of (vendor_responses, total_count)
         """
-        # Get all vendors with their items
-        vendors = db.query(Vendor).all()
-
         user1_prefs = request.user1_preferences
         user2_prefs = request.user2_preferences
         is_user1_active = len(user1_prefs) > 0
         is_user2_active = len(user2_prefs) > 0
+
+        # Build base query with eager loading
+        query = db.query(Vendor).options(selectinload(Vendor.items))
+
+        # Apply distance bounding box filter BEFORE loading vendors (if location provided)
+        if request.lat is not None and request.lng is not None:
+            max_distance = 10.0  # TODO: Make configurable
+            lat_delta = max_distance / 69.0
+            lng_delta = max_distance / (69.0 * math.cos(math.radians(request.lat)))
+
+            query = query.filter(
+                Vendor.lat.between(request.lat - lat_delta, request.lat + lat_delta),
+                Vendor.lng.between(request.lng - lng_delta, request.lng + lng_delta)
+            )
+
+        # If preferences are active, filter to vendors that have at least one matching item
+        if is_user1_active or is_user2_active:
+            # Build filters for each user
+            user1_filter = VendorService._build_preference_filter(user1_prefs)
+            user2_filter = VendorService._build_preference_filter(user2_prefs)
+
+            # Combine with OR: vendor must have items matching user1 OR user2
+            if user1_filter is not None and user2_filter is not None:
+                combined_filter = or_(user1_filter, user2_filter)
+            elif user1_filter is not None:
+                combined_filter = user1_filter
+            else:
+                combined_filter = user2_filter
+
+            # Join with items and filter
+            query = query.join(Item).filter(combined_filter).distinct()
+
+        # Execute query to get vendors (with items eagerly loaded)
+        vendors = query.all()
 
         processed_vendors = []
 
@@ -150,16 +195,17 @@ class VendorService:
             total_votes = sum(item.total_votes for item in relevant_items)
             rating_percentage = min(total_upvotes / total_votes, 1.0) if total_votes > 0 else 0.0
 
-            # Calculate distance if user location provided
+            # Calculate exact distance if user location provided
+            # (bounding box filter already applied in SQL)
             distance_miles = None
             if request.lat is not None and request.lng is not None:
                 distance_miles = VendorService.calculate_distance(
                     request.lat, request.lng, vendor.lat, vendor.lng
                 )
 
-                # Filter out vendors beyond 10 miles
-                MAX_DISTANCE_MILES = 10.0
-                if distance_miles > MAX_DISTANCE_MILES:
+                # Apply exact distance filter (after rough bounding box)
+                max_distance = 10.0  # TODO: Make configurable
+                if distance_miles > max_distance:
                     continue
 
             # Build response object
