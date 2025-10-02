@@ -39,6 +39,7 @@ import androidx.navigation.NavController
 import com.example.dietprefs.model.Preference
 import com.example.dietprefs.model.SortColumn
 import com.example.dietprefs.model.SortDirection
+import com.example.dietprefs.ui.navigation.Screen
 import com.example.dietprefs.ui.theme.backgroundGrey
 import com.example.dietprefs.ui.theme.dietprefsGrey
 import com.example.dietprefs.ui.theme.upvoteGreen
@@ -342,7 +343,11 @@ fun SearchResultsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp),
+                                .height(48.dp)
+                                .clickable {
+                                    sharedViewModel.selectVendorByName(vendor.vendorName)
+                                    navController.navigate(Screen.RestaurantDetail.route)
+                                },
                             verticalAlignment = Alignment.Top // Align to top for multi-line text
                         ) {
                             // Vendor Name and Rating

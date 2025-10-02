@@ -10,6 +10,7 @@ import android.content.Context
 import com.example.dietprefs.location.LocationService
 import com.example.dietprefs.location.UserLocation
 import com.example.dietprefs.network.models.VendorResponse
+import com.example.dietprefs.network.models.ItemResponse
 import com.example.dietprefs.repository.VendorRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +41,9 @@ class SharedViewModel(
     // Caching for local sort operations - stores all fetched vendors
     private var cachedAllVendors = listOf<DisplayVendor>()
 
+    // Cache full VendorResponse objects for navigation
+    private var cachedVendorResponses = listOf<VendorResponse>()
+
     // Pagination state
     private var currentPage = 1  // API uses 1-based indexing
     private val pageSize = 10
@@ -64,8 +68,34 @@ class SharedViewModel(
     // Debounce flag to prevent rapid successive sort operations
     private var isSorting = false
 
+    // Restaurant detail state
+    private val _selectedVendor = MutableStateFlow<VendorResponse?>(null)
+    val selectedVendor: StateFlow<VendorResponse?> = _selectedVendor.asStateFlow()
+
+    private val _menuItems = MutableStateFlow<List<ItemResponse>>(emptyList())
+    val menuItems: StateFlow<List<ItemResponse>> = _menuItems.asStateFlow()
+
+    private val _isLoadingItems = MutableStateFlow(false)
+    val isLoadingItems: StateFlow<Boolean> = _isLoadingItems.asStateFlow()
+
+    private val _selectedItemIndex = MutableStateFlow(0)
+    val selectedItemIndex: StateFlow<Int> = _selectedItemIndex.asStateFlow()
+
     fun updateVisibleRange(start: Int, end: Int) {
         _visibleRange.value = start to end
+    }
+
+    fun selectVendor(vendor: VendorResponse) {
+        _selectedVendor.value = vendor
+    }
+
+    fun selectVendorByName(vendorName: String) {
+        val vendor = cachedVendorResponses.find { it.name == vendorName }
+        _selectedVendor.value = vendor
+    }
+
+    fun updateSelectedItemIndex(index: Int) {
+        _selectedItemIndex.value = index
     }
 
     fun toggleUser1Pref(pref: Preference) {
@@ -207,6 +237,9 @@ class SharedViewModel(
                     _totalResultsCount.value = response.pagination.totalResults
                     totalPages = response.pagination.totalPages
 
+                    // Cache full vendor responses
+                    cachedVendorResponses = response.vendors
+
                     // Convert API response to DisplayVendor and cache them
                     val displayVendors = response.vendors.map { it.toDisplayVendor() }
                     cachedAllVendors = displayVendors
@@ -216,6 +249,7 @@ class SharedViewModel(
                     _pagedVendors.value = emptyList()
                     _totalResultsCount.value = 0
                     cachedAllVendors = emptyList()
+                    cachedVendorResponses = emptyList()
                 }
             } finally {
                 _isLoading.value = false
@@ -273,6 +307,9 @@ class SharedViewModel(
                 )
 
                 result.onSuccess { response ->
+                    // Append new vendor responses to cache
+                    cachedVendorResponses = cachedVendorResponses + response.vendors
+
                     // Append new vendors to cache and displayed list
                     val newVendors = response.vendors.map { it.toDisplayVendor() }
                     cachedAllVendors = cachedAllVendors + newVendors
@@ -322,5 +359,70 @@ class SharedViewModel(
             querySpecificRatingValue = this.rating.percentage,
             combinedRelevantItemCount = this.itemCounts.totalRelevant
         )
+    }
+
+    fun fetchMenuItems(vendorId: Int) {
+        viewModelScope.launch {
+            _isLoadingItems.value = true
+            _errorMessage.value = null
+
+            try {
+                val user1ApiPrefs = _user1Prefs.value
+                    .filter { it.hasApiSupport }
+                    .map { it.apiName }
+
+                val user2ApiPrefs = _user2Prefs.value
+                    .filter { it.hasApiSupport }
+                    .map { it.apiName }
+
+                val result = repository.getVendorItems(
+                    vendorId = vendorId,
+                    user1Preferences = user1ApiPrefs,
+                    user2Preferences = user2ApiPrefs
+                )
+
+                result.onSuccess { items ->
+                    _menuItems.value = items
+                    _selectedItemIndex.value = 0 // Reset to restaurant header
+                }.onFailure { exception ->
+                    _errorMessage.value = exception.message ?: "Failed to load menu items"
+                    _menuItems.value = emptyList()
+                }
+            } finally {
+                _isLoadingItems.value = false
+            }
+        }
+    }
+
+    fun voteOnItem(itemId: Int, voteType: String) {
+        viewModelScope.launch {
+            try {
+                val result = repository.voteOnItem(itemId, voteType)
+                result.onSuccess {
+                    // Optimistic update: increment the vote count locally
+                    val updatedItems = _menuItems.value.map { item ->
+                        if (item.id == itemId) {
+                            val newUpvotes = if (voteType == "up") item.rating.upvotes + 1 else item.rating.upvotes
+                            val newTotalVotes = item.rating.totalVotes + 1
+                            val newPercentage = if (newTotalVotes > 0) newUpvotes.toFloat() / newTotalVotes else 0f
+                            item.copy(
+                                rating = item.rating.copy(
+                                    upvotes = newUpvotes,
+                                    totalVotes = newTotalVotes,
+                                    percentage = newPercentage
+                                )
+                            )
+                        } else {
+                            item
+                        }
+                    }
+                    _menuItems.value = updatedItems
+                }.onFailure { exception ->
+                    _errorMessage.value = exception.message ?: "Failed to vote"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Failed to vote"
+            }
+        }
     }
 }
