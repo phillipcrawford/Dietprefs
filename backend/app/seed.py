@@ -51,10 +51,17 @@ def seed_database():
             db.add(vendor)
             db.flush()  # Get the vendor ID
 
-            # Create 7 items for each vendor
+            # Create 7 items for each vendor with VARIED dietary patterns per vendor
+            # Use vendor ID to create different restaurant "specialties"
             for j in range(1, 8):
                 total_votes = random.randint(5, 51)
                 upvotes = random.randint(0, total_votes + 1)
+
+                # Each vendor has different probabilities for dietary options
+                # This makes some vendors more vegan-friendly, others more pescetarian, etc.
+                is_veg_focused = (i % 5 == 0)  # Every 5th vendor is vegetarian-focused
+                is_vegan_focused = (i % 7 == 0)  # Every 7th vendor is vegan-focused
+                is_seafood_focused = (i % 4 == 0)  # Every 4th vendor has more seafood
 
                 item = Item(
                     vendor_id=vendor.id,
@@ -62,10 +69,10 @@ def seed_database():
                     price=round(random.uniform(5.0, 25.0), 2),
                     pictures="",
 
-                    # Dietary preferences (varied patterns)
-                    vegetarian=(j % 3 == 0),
-                    pescetarian=(j % 2 == 0),
-                    vegan=(j % 4 == 0),
+                    # Dietary preferences - varied by vendor type
+                    vegetarian=(is_veg_focused and j <= 5) or (j % 3 == 0),
+                    pescetarian=(is_seafood_focused and j <= 4) or (j % 2 == 0),
+                    vegan=(is_vegan_focused and j <= 3) or (j % 4 == 0),
                     keto=(j % 5 == 0),
                     organic=(j % 2 != 0),
                     gmo_free=(j == 1),

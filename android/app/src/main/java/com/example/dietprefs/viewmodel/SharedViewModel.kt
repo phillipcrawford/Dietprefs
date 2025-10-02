@@ -58,6 +58,9 @@ class SharedViewModel(
     private var userLat: Double? = null
     private var userLng: Double? = null
 
+    // Debounce flag to prevent rapid successive sort operations
+    private var isSorting = false
+
     fun updateVisibleRange(start: Int, end: Int) {
         _visibleRange.value = start to end
     }
@@ -88,6 +91,9 @@ class SharedViewModel(
     }
 
     fun updateSortState(column: SortColumn) {
+        // Prevent concurrent sort operations
+        if (isSorting) return
+
         val currentSort = _sortState.value
         val newDirection = if (currentSort.column == column) {
             // Toggle direction if same column is clicked
@@ -105,8 +111,55 @@ class SharedViewModel(
             }
         }
         _sortState.value = SortState(column, newDirection)
-        // Re-search with new sort parameters
-        searchVendors()
+
+        // Sort cached results locally instead of making API call
+        applySortToCachedResults()
+    }
+
+    private fun applySortToCachedResults() {
+        if (cachedAllVendors.isEmpty() || isSorting) return
+
+        isSorting = true
+
+        try {
+            // Create a copy to avoid concurrent modification
+            val vendorsToSort = cachedAllVendors.toList()
+
+            val sortedVendors = when (_sortState.value.column) {
+                SortColumn.VENDOR_RATING -> {
+                    if (_sortState.value.direction == SortDirection.ASCENDING) {
+                        vendorsToSort.sortedBy { it.querySpecificRatingValue }
+                    } else {
+                        vendorsToSort.sortedByDescending { it.querySpecificRatingValue }
+                    }
+                }
+                SortColumn.DISTANCE -> {
+                    if (_sortState.value.direction == SortDirection.ASCENDING) {
+                        vendorsToSort.sortedBy { it.distanceMiles }
+                    } else {
+                        vendorsToSort.sortedByDescending { it.distanceMiles }
+                    }
+                }
+                SortColumn.MENU_ITEMS -> {
+                    if (_sortState.value.direction == SortDirection.ASCENDING) {
+                        vendorsToSort.sortedBy { it.combinedRelevantItemCount }
+                    } else {
+                        vendorsToSort.sortedByDescending { it.combinedRelevantItemCount }
+                    }
+                }
+            }
+
+            // Update cached list with sorted order
+            cachedAllVendors = sortedVendors
+
+            // Calculate how many items are currently displayed
+            val currentDisplayCount = _pagedVendors.value.size
+
+            // Maintain the same number of displayed items after sort (don't reset to page 1)
+            _pagedVendors.value = sortedVendors.take(currentDisplayCount.coerceAtLeast(pageSize))
+        } finally {
+            isSorting = false
+        }
     }
 
     fun searchVendors() {
@@ -154,13 +207,15 @@ class SharedViewModel(
                     _totalResultsCount.value = response.pagination.totalResults
                     totalPages = response.pagination.totalPages
 
-                    // Convert API response to DisplayVendor
+                    // Convert API response to DisplayVendor and cache them
                     val displayVendors = response.vendors.map { it.toDisplayVendor() }
+                    cachedAllVendors = displayVendors
                     _pagedVendors.value = displayVendors
                 }.onFailure { exception ->
                     _errorMessage.value = exception.message ?: "Unknown error occurred"
                     _pagedVendors.value = emptyList()
                     _totalResultsCount.value = 0
+                    cachedAllVendors = emptyList()
                 }
             } finally {
                 _isLoading.value = false
@@ -169,6 +224,16 @@ class SharedViewModel(
     }
 
     fun loadNextPage() {
+        // Check if we have more cached results to show
+        val nextPageStartIndex = _pagedVendors.value.size
+        if (nextPageStartIndex < cachedAllVendors.size) {
+            // Load next page from cache
+            val nextPageEndIndex = minOf(nextPageStartIndex + pageSize, cachedAllVendors.size)
+            _pagedVendors.value = cachedAllVendors.subList(0, nextPageEndIndex)
+            return
+        }
+
+        // Need to fetch more from API
         if (currentPage >= totalPages || _isLoading.value) return
 
         viewModelScope.launch {
@@ -208,8 +273,9 @@ class SharedViewModel(
                 )
 
                 result.onSuccess { response ->
-                    // Append new vendors to existing list
+                    // Append new vendors to cache and displayed list
                     val newVendors = response.vendors.map { it.toDisplayVendor() }
+                    cachedAllVendors = cachedAllVendors + newVendors
                     _pagedVendors.value = _pagedVendors.value + newVendors
                 }.onFailure { exception ->
                     _errorMessage.value = exception.message ?: "Error loading next page"
