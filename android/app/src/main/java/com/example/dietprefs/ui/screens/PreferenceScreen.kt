@@ -63,6 +63,8 @@ fun PreferenceScreen(
             ) {
                 Button(
                     onClick = {
+                        // Request user location first
+                        sharedViewModel.requestUserLocation(context)
                         // Call searchVendors to query the backend API
                         sharedViewModel.searchVendors()
                         // Then navigate to search results

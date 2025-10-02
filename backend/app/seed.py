@@ -3,6 +3,7 @@ Database seeding script for Dietprefs.
 Creates 20 vendors with 7 menu items each for testing.
 """
 import random
+import math
 from app.database import SessionLocal, engine, Base
 from app.models.vendor import Vendor
 from app.models.item import Item
@@ -29,11 +30,32 @@ def seed_database():
 
         print("Seeding database with test data...")
 
+        # Test location: San Francisco (37.7749, -122.4194)
+        # Spread vendors across different distances to test 10-mile filter
+        # ~0.014 degrees latitude/longitude ≈ 1 mile
         for i in range(1, 21):  # 20 vendors
+            # Vendors 1-10: Within 5 miles (should appear in results)
+            # Vendors 11-15: 5-10 miles (should appear in results)
+            # Vendors 16-20: Beyond 10 miles (should be filtered out)
+            if i <= 10:
+                # Within 5 miles: 0-5 mile radius
+                distance_factor = random.uniform(0, 0.07)
+            elif i <= 15:
+                # 5-10 miles: 5-10 mile radius
+                distance_factor = random.uniform(0.07, 0.14)
+            else:
+                # Beyond 10 miles: 10-15 mile radius (for testing filter)
+                distance_factor = random.uniform(0.14, 0.21)
+
+            # Random angle for spreading vendors around the center
+            angle = random.uniform(0, 2 * 3.14159)
+            lat_offset = distance_factor * random.choice([-1, 1]) * abs(math.cos(angle))
+            lng_offset = distance_factor * random.choice([-1, 1]) * abs(math.sin(angle))
+
             vendor = Vendor(
                 name=f"Vendor {i}",
-                lat=37.7749 + (random.random() - 0.5) * 0.1,  # Around San Francisco
-                lng=-122.4194 + (random.random() - 0.5) * 0.1,
+                lat=37.7749 + lat_offset,  # San Francisco center
+                lng=-122.4194 + lng_offset,
                 address=f"{100 + i * 10} Main St, San Francisco, CA",
                 zipcode=94100 + i,
                 phone=f"415555{i:04d}",

@@ -82,7 +82,7 @@ curl -X POST http://localhost:8000/api/v1/vendors/search \
   }'
 ```
 
-**Test with dietary preferences**:
+**Test with dietary preferences and location** (10-mile radius filter):
 ```bash
 curl -X POST http://localhost:8000/api/v1/vendors/search \
   -H "Content-Type: application/json" \
@@ -91,12 +91,14 @@ curl -X POST http://localhost:8000/api/v1/vendors/search \
     "user2_preferences": ["keto"],
     "lat": 37.7749,
     "lng": -122.4194,
-    "sort_by": "rating",
-    "sort_direction": "desc",
+    "sort_by": "distance",
+    "sort_direction": "asc",
     "page": 1,
     "page_size": 10
   }'
 ```
+
+**Note**: When `lat` and `lng` are provided, the API automatically filters out vendors beyond 10 miles and calculates real distances.
 
 ---
 

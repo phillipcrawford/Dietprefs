@@ -6,6 +6,9 @@ import com.example.dietprefs.model.Preference
 import com.example.dietprefs.model.SortColumn
 import com.example.dietprefs.model.SortDirection
 import com.example.dietprefs.model.SortState
+import android.content.Context
+import com.example.dietprefs.location.LocationService
+import com.example.dietprefs.location.UserLocation
 import com.example.dietprefs.network.models.VendorResponse
 import com.example.dietprefs.repository.VendorRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,9 +57,9 @@ class SharedViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    // User location (can be updated if we add location services)
-    private var userLat: Double? = null
-    private var userLng: Double? = null
+    // User location
+    private val _userLocation = MutableStateFlow<UserLocation?>(null)
+    val userLocation: StateFlow<UserLocation?> = _userLocation.asStateFlow()
 
     // Debounce flag to prevent rapid successive sort operations
     private var isSorting = false
@@ -192,8 +195,8 @@ class SharedViewModel(
                 val result = repository.searchVendors(
                     user1Preferences = user1ApiPrefs,
                     user2Preferences = user2ApiPrefs,
-                    latitude = userLat,
-                    longitude = userLng,
+                    latitude = _userLocation.value?.latitude,
+                    longitude = _userLocation.value?.longitude,
                     sortBy = sortBy,
                     sortDirection = sortDirection,
                     page = currentPage,
@@ -261,8 +264,8 @@ class SharedViewModel(
                 val result = repository.searchVendors(
                     user1Preferences = user1ApiPrefs,
                     user2Preferences = user2ApiPrefs,
-                    latitude = userLat,
-                    longitude = userLng,
+                    latitude = _userLocation.value?.latitude,
+                    longitude = _userLocation.value?.longitude,
                     sortBy = sortBy,
                     sortDirection = sortDirection,
                     page = currentPage,
@@ -286,6 +289,27 @@ class SharedViewModel(
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    /**
+     * Request user's current location.
+     * This should be called from the UI after location permissions are granted.
+     */
+    fun requestUserLocation(context: Context) {
+        viewModelScope.launch {
+            val locationService = LocationService(context)
+
+            if (!locationService.hasLocationPermission()) {
+                // Permission not granted - UI should handle requesting permission
+                return@launch
+            }
+
+            // Try to get current location (fresh GPS)
+            val location = locationService.getCurrentLocation()
+                ?: locationService.getLastKnownLocation() // Fallback to cached location
+
+            _userLocation.value = location
+        }
     }
 
     private fun VendorResponse.toDisplayVendor(): DisplayVendor {

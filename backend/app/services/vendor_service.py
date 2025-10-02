@@ -152,6 +152,11 @@ class VendorService:
                     request.lat, request.lng, vendor.lat, vendor.lng
                 )
 
+                # Filter out vendors beyond 10 miles
+                MAX_DISTANCE_MILES = 10.0
+                if distance_miles > MAX_DISTANCE_MILES:
+                    continue
+
             # Build response object
             vendor_response = VendorResponse(
                 id=vendor.id,
