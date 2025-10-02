@@ -310,23 +310,28 @@ fun SearchResultsScreen(
                 color = backgroundGrey
             )
 
-            // --- Results List or Empty/Loading State ---
-            if (isLoading && searchQuery.isBlank()) { // Show loading only if not actively searching an empty list
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (pagedVendors.filter { it.vendorName.contains(searchQuery, ignoreCase = true) }.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
-                    Text(
-                        "No vendors match the selected preferences.",
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    state = listState
-                ) {
+            // --- Results List or Empty State ---
+            Box(modifier = Modifier.weight(1f)) {
+                if (pagedVendors.filter { it.vendorName.contains(searchQuery, ignoreCase = true) }.isEmpty()) {
+                    // Empty state - but keep structure visible
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator()
+                        } else {
+                            Text(
+                                "No vendors match the selected preferences.",
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState
+                    ) {
                     itemsIndexed(
                         items = pagedVendors.filter {
                             it.vendorName.contains(searchQuery, ignoreCase = true)
@@ -433,6 +438,7 @@ fun SearchResultsScreen(
                             }
                         }
                     }
+                }
                 }
             }
 
