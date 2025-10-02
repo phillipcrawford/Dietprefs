@@ -19,8 +19,13 @@ def seed_database():
         # Check if database is already seeded
         existing_vendors = db.query(Vendor).count()
         if existing_vendors > 0:
-            print(f"Database already has {existing_vendors} vendors. Skipping seed.")
-            return
+            print(f"Database already has {existing_vendors} vendors.")
+            print("FORCE RESEED: Deleting existing data...")
+            # Delete all existing data
+            db.query(Item).delete()
+            db.query(Vendor).delete()
+            db.commit()
+            print("Existing data cleared. Proceeding with fresh seed...")
 
         print("Seeding database with test data...")
 
