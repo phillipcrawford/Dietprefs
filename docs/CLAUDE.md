@@ -33,14 +33,14 @@
 
 ## What's Next (No Specific Order)
 
+**🚧 In Progress**:
+- Restaurant detail view - **See `RESTAURANT_DETAIL_PLAN.md` for full spec**
+
 **UX Improvements**:
 - Welcome/onboarding screen
-- Restaurant detail view (menu items, photos, external links)
-- Photo voting (Tinder-style swipe)
 - Make distance radius user-configurable (currently hardcoded 10mi)
 
 **Backend**:
-- Voting endpoint (`POST /api/items/{id}/vote`)
 - Image uploads (S3/Cloudinary integration)
 - More realistic seed data (1000+ vendors)
 
@@ -70,6 +70,19 @@
 ---
 
 ## Recent Work (Reverse Chronological)
+
+### 2025-10-02: Planning Restaurant Detail Screen 📋
+- Analyzed wireframe `Dietprefs (4 Third Page Restaraunt Card).png`
+- Created detailed implementation plan in `RESTAURANT_DETAIL_PLAN.md`
+- Key features: scrollable stack, selection highlighting, photo carousel, voting, info panel
+- Ready to implement in next session
+
+### 2025-10-02: Documentation Cleanup 📝
+- Simplified CLAUDE.md (18KB → 3.8KB)
+- Simplified architecture.md (17KB → 6.1KB)
+- Removed phase-based planning (too rigid)
+- Added .gitignore for Python/Android artifacts
+- Total: 1061 → 389 lines
 
 ### 2025-10-02: Backend Performance Optimization ✅
 - Fixed N+1 query problem (21 → 2-3 queries)
