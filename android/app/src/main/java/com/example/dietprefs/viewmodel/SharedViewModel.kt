@@ -152,11 +152,8 @@ class SharedViewModel(
             // Update cached list with sorted order
             cachedAllVendors = sortedVendors
 
-            // Calculate how many items are currently displayed
-            val currentDisplayCount = _pagedVendors.value.size
-
-            // Maintain the same number of displayed items after sort (don't reset to page 1)
-            _pagedVendors.value = sortedVendors.take(currentDisplayCount.coerceAtLeast(pageSize))
+            // Reset to first page after sort (brings user back to top)
+            _pagedVendors.value = sortedVendors.take(pageSize)
         } finally {
             isSorting = false
         }

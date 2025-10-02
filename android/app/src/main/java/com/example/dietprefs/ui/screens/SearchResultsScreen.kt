@@ -66,11 +66,17 @@ fun SearchResultsScreen(
 
     val listState = rememberLazyListState()
     var searchQuery by remember { mutableStateOf("") } // Local search query
+    val coroutineScope = rememberCoroutineScope()
 
     // Determine user mode for results display
     val isTwoUserMode = user1Prefs.isNotEmpty() && user2Prefs.isNotEmpty()
 
     // --- Effects ---
+    // Scroll to top when sort state changes
+    LaunchedEffect(sortState) {
+        listState.scrollToItem(0)
+    }
+
     // Update visible range based on LazyListState
     LaunchedEffect(listState.firstVisibleItemIndex, pagedVendors.size) {
         if (pagedVendors.isNotEmpty()) {
