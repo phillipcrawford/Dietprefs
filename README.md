@@ -61,6 +61,8 @@ cd android
 - Jetpack Compose
 - Kotlin
 - MVVM Architecture
+- Retrofit + OkHttp
+- Repository Pattern
 - StateFlow
 
 **Planned**:
@@ -69,10 +71,17 @@ cd android
 
 ## Current Status
 
-✅ **Backend API deployed and live**: https://dietprefs-production.up.railway.app
-✅ **Database seeded** with 20 vendors and 140 menu items
-🚧 **Android app** uses local Room database (Phase 2: migrating to API)
+✅ **Phase 1 Complete**: Backend API deployed and live at https://dietprefs-production.up.railway.app
+✅ **Phase 2 Complete**: Android app fully migrated to REST API with smart caching
+🚧 **Phase 3 In Progress**: Location services and distance-based filtering
 ❌ **iOS and Web clients** not started
+
+**Recent Achievements**:
+- Android app now uses Retrofit to call live backend API
+- Removed all Room database dependencies
+- Implemented client-side caching for instant sorting
+- Fixed UX issues (instant sort, scroll to top, no white flash)
+- Tested with varied backend data
 
 See [docs/CLAUDE.md](docs/CLAUDE.md) for detailed status and roadmap.
 

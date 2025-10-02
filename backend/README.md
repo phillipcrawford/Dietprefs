@@ -8,6 +8,8 @@ FastAPI backend for Dietprefs food vendor discovery app.
 **API Docs**: https://dietprefs-production.up.railway.app/docs
 **Health Check**: https://dietprefs-production.up.railway.app/health
 
+**Status**: ✅ Production-ready and serving Android client
+
 ## Tech Stack
 - **Framework**: FastAPI
 - **Database**: PostgreSQL

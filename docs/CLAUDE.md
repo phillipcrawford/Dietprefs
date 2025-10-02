@@ -98,19 +98,30 @@ Menu items with extensive dietary/allergen flags:
 - Color-coded user preferences (red/magenta)
 - **Note**: Currently uses Room database (to be replaced with API calls)
 
-### 🚧 Next Phase: Android Migration to Backend API
+### ✅ Phase 2 Complete: Android Migration to Backend API
+
+**Completed Tasks**:
+1. ✅ Removed Room database from Android app
+2. ✅ Added Retrofit networking layer with Gson converters
+3. ✅ Created Repository pattern for API calls
+4. ✅ Updated SharedViewModel to call backend API
+5. ✅ Implemented smart caching for instant local sorting
+6. ✅ Fixed UX issues (scroll to top, no white flash)
+7. ✅ Tested end-to-end with deployed backend
+
+**Current Architecture**: Android app fully migrated to REST API with client-side caching.
+
+### 🚧 Next Phase: Location Services & Distance Filtering
 
 **Priority Tasks**:
-1. Remove Room database from Android app
-2. Add Retrofit networking layer
-3. Create repository pattern for API calls
-4. Update SharedViewModel to call backend API
-5. Test end-to-end with deployed backend
-
-See Phase 2 in "Migration Roadmap" section below.
+1. Add location services to get user's current GPS position
+2. Send lat/lng to backend for real distance calculations
+3. Add max distance filter (7-10 miles radius)
+4. Progressive background loading (fetch closest results first)
+5. Optional: Manual location selection UI
 
 ### ❌ Not Yet Implemented
-- Android networking layer (Retrofit)
+- Location services and GPS integration
 - Welcome/onboarding screen (Wireframe 1)
 - Restaurant detail screen (Wireframe 4)
 - Photo voting system (Tinder-style)
@@ -148,15 +159,15 @@ Located in `docs/wireframes/` directory:
   - Map, hours, contact info, directions
 
 ### Implementation Status vs Wireframes
-✅ **Completed**: Multi-user preferences, results filtering, sorting, dual counts
-🚧 **In Progress**: Backend API development, Android migration to Retrofit
+✅ **Completed**: Multi-user preferences, results filtering, sorting, dual counts, backend API, Android-to-API migration
+🚧 **In Progress**: Location services, distance-based filtering
 ❌ **Missing**: Welcome screen, restaurant detail screen, photo voting, external integrations
 
 ---
 
 ## Migration Roadmap
 
-### Phase 1: Backend Development (Current Priority)
+### Phase 1: Backend Development ✅ COMPLETE
 See `architecture.md` for detailed implementation plan.
 
 **Goals**:
@@ -166,22 +177,51 @@ See `architecture.md` for detailed implementation plan.
 4. Deploy to Railway/Render
 5. Seed database with test data (20 vendors × 7 items)
 
-### Phase 2: Android Migration
-**Goals**:
-1. Remove Room database (`AppDatabase.kt`, `VendorDao.kt`)
-2. Add Retrofit networking layer
-3. Create Repository pattern for API calls
-4. Update SharedViewModel to call API instead of Room
-5. Test end-to-end with real backend
+### Phase 2: Android Migration ✅ COMPLETE
+**Completed Goals**:
+1. ✅ Removed Room database (`AppDatabase.kt`, `VendorDao.kt`, all Room entities)
+2. ✅ Added Retrofit networking layer (Retrofit 2.9.0, OkHttp, Gson)
+3. ✅ Created Repository pattern (`VendorRepository`)
+4. ✅ Updated SharedViewModel with smart caching for instant local sorting
+5. ✅ Tested end-to-end with real backend at `https://dietprefs-production.up.railway.app`
+6. ✅ Fixed UX issues (scroll to top on sort, eliminated white flash)
+7. ✅ Added varied test data to verify API integration
 
-### Phase 3: Feature Completion
+**Key Files Created**:
+- `android/app/src/main/java/com/example/dietprefs/network/DietPrefsApiService.kt`
+- `android/app/src/main/java/com/example/dietprefs/network/RetrofitClient.kt`
+- `android/app/src/main/java/com/example/dietprefs/network/models/ApiModels.kt`
+- `android/app/src/main/java/com/example/dietprefs/repository/VendorRepository.kt`
+
+**Key Files Modified**:
+- `viewmodel/SharedViewModel.kt` - Complete rewrite with caching
+- `model/Preference.kt` - Added `apiName` and `hasApiSupport` fields
+- `ui/screens/PreferenceScreen.kt` - Updated to call `searchVendors()`
+- `ui/screens/SearchResultsScreen.kt` - Added scroll-to-top on sort
+
+### Phase 3: Location Services & Distance Filtering 🚧 CURRENT
+**Goals**:
+1. Add Android location permissions and GPS services
+2. Send user lat/lng to backend API
+3. Implement max distance filter (7-10 miles) in backend
+4. Progressive background loading (fetch closest vendors first)
+5. Optional: Manual location selection UI
+6. Display real distances instead of placeholder values
+
+**Why This Matters**:
+- Core feature: Users want nearby restaurants
+- Scalability: Prevents loading thousands of distant vendors
+- UX: Progressive loading shows closest results immediately
+- Future-proof: Sets up architecture for location-based features
+
+### Phase 4: Feature Completion (Future)
 **Goals**:
 1. Welcome/onboarding screen (Wireframe 1)
 2. Restaurant detail screen (Wireframe 4)
 3. Photo voting system (Tinder-style swipe)
 4. External integrations (Grubhub, Yelp, etc.)
 
-### Phase 4: iOS & Web Clients
+### Phase 5: iOS & Web Clients (Future)
 **Goals**:
 1. iOS app (SwiftUI + URLSession)
 2. Web app (React/Vue)
@@ -210,6 +250,35 @@ See `architecture.md` for detailed implementation plan.
 ---
 
 ## Recent Work Context
+
+### 2025-10-01: Phase 2 Complete - Android Fully Migrated to API ✅
+
+- **Android Migration** (Complete):
+  - Removed all Room database dependencies (Room, KSP, entity files)
+  - Implemented Retrofit 2.9.0 networking layer with Gson converters
+  - Created `VendorRepository` with Result-based error handling
+  - Complete SharedViewModel rewrite with smart caching strategy
+  - Cache stores all fetched vendors for instant local sorting
+  - Sorting now instant (no API call, no screen reload)
+  - Fixed UX: scroll to top on sort, eliminated white flash during loads
+  - Added INTERNET and ACCESS_NETWORK_STATE permissions
+  - Updated Preference model with `apiName` mapping (snake_case)
+  - Tested end-to-end with varied backend data - confirmed API integration
+
+- **Backend Updates**:
+  - Modified seed data to create varied vendor specialties
+  - Vendors 5, 10, 15, 20: Vegetarian-focused (5 items each)
+  - Vendors 7, 14: Vegan-focused (3 items each)
+  - Vendors 4, 8, 12, 16, 20: Seafood-focused (4 items each)
+  - Force-reseed on deploy to clear old test data
+  - Created admin endpoint (for future reseeding needs)
+
+- **Architecture Achievements**:
+  - Clean separation: API → Repository → ViewModel → UI
+  - Client-side caching eliminates unnecessary API calls
+  - Instant sorting/filtering on cached results
+  - Progressive loading ready (fetch page 1, cache, show more on scroll)
+  - Ready for location-based features (lat/lng parameters already supported)
 
 ### 2025-10-01: Backend Deployed ✅
 
