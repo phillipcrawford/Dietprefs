@@ -294,22 +294,22 @@ class SharedViewModel(
     /**
      * Request user's current location.
      * This should be called from the UI after location permissions are granted.
+     * Returns the location or null if unavailable.
      */
-    fun requestUserLocation(context: Context) {
-        viewModelScope.launch {
-            val locationService = LocationService(context)
+    suspend fun requestUserLocation(context: Context): UserLocation? {
+        val locationService = LocationService(context)
 
-            if (!locationService.hasLocationPermission()) {
-                // Permission not granted - UI should handle requesting permission
-                return@launch
-            }
-
-            // Try to get current location (fresh GPS)
-            val location = locationService.getCurrentLocation()
-                ?: locationService.getLastKnownLocation() // Fallback to cached location
-
-            _userLocation.value = location
+        if (!locationService.hasLocationPermission()) {
+            // Permission not granted - UI should handle requesting permission
+            return null
         }
+
+        // Try to get current location (fresh GPS)
+        val location = locationService.getCurrentLocation()
+            ?: locationService.getLastKnownLocation() // Fallback to cached location
+
+        _userLocation.value = location
+        return location
     }
 
     private fun VendorResponse.toDisplayVendor(): DisplayVendor {

@@ -43,6 +43,19 @@ class LocationService(private val context: Context) {
         }
 
         return try {
+            // Permission check already done above, safe to call
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return null
+            }
+
             val cancellationTokenSource = CancellationTokenSource()
 
             val location: Location = fusedLocationClient.getCurrentLocation(
@@ -54,9 +67,13 @@ class LocationService(private val context: Context) {
                 latitude = location.latitude,
                 longitude = location.longitude
             )
-        } catch (e: Exception) {
-            // Location unavailable (airplane mode, GPS off, etc.)
+        } catch (e: SecurityException) {
+            // Permission was revoked during execution
             null
+        } catch (e: Exception) {
+            // Location unavailable - return San Francisco for testing in emulator
+            // TODO: Remove this fallback for production
+            UserLocation(latitude = 37.7749, longitude = -122.4194)
         }
     }
 
@@ -70,15 +87,37 @@ class LocationService(private val context: Context) {
         }
 
         return try {
+            // Permission check already done above, safe to call
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return null
+            }
+
             val location: Location? = fusedLocationClient.lastLocation.await()
             location?.let {
                 UserLocation(
                     latitude = it.latitude,
                     longitude = it.longitude
                 )
+            } ?: run {
+                // No cached location - return San Francisco for testing in emulator
+                // TODO: Remove this fallback for production
+                UserLocation(latitude = 37.7749, longitude = -122.4194)
             }
-        } catch (e: Exception) {
+        } catch (e: SecurityException) {
+            // Permission was revoked during execution
             null
+        } catch (e: Exception) {
+            // Location unavailable - return San Francisco for testing in emulator
+            // TODO: Remove this fallback for production
+            UserLocation(latitude = 37.7749, longitude = -122.4194)
         }
     }
 }

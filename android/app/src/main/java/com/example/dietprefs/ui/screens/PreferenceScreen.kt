@@ -1,5 +1,8 @@
 package com.example.dietprefs.ui.screens
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,6 +31,8 @@ import com.example.dietprefs.ui.theme.selectedTeal
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
 import com.example.dietprefs.viewmodel.SharedViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun PreferenceScreen(
@@ -40,9 +45,33 @@ fun PreferenceScreen(
     val user1Prefs by sharedViewModel.user1Prefs.collectAsState()
     val user2Prefs by sharedViewModel.user2Prefs.collectAsState()
     val isUser2Active = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val user1Selected = user1Prefs.map { it.display }
     val user2Selected = user2Prefs.map { it.display }
+
+    // Location permission launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+        if (fineLocationGranted || coarseLocationGranted) {
+            // Permission granted, request location and search
+            scope.launch {
+                // Wait for location to be retrieved
+                sharedViewModel.requestUserLocation(context)
+                // Now search with location
+                sharedViewModel.searchVendors()
+                onSearchClick()
+            }
+        } else {
+            // Permission denied, search without location
+            sharedViewModel.searchVendors()
+            onSearchClick()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -63,12 +92,13 @@ fun PreferenceScreen(
             ) {
                 Button(
                     onClick = {
-                        // Request user location first
-                        sharedViewModel.requestUserLocation(context)
-                        // Call searchVendors to query the backend API
-                        sharedViewModel.searchVendors()
-                        // Then navigate to search results
-                        onSearchClick()
+                        // Request location permissions
+                        locationPermissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
                     },
                     modifier = Modifier
                         .weight(1f)
