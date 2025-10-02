@@ -1,28 +1,30 @@
 package com.example.dietprefs.viewmodel
 
-import com.example.dietprefs.model.SortColumn
-import com.example.dietprefs.model.SortState
-import com.example.dietprefs.model.SortDirection
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.dietprefs.data.AppDatabase
-import com.example.dietprefs.data.ItemEntity
-import com.example.dietprefs.data.VendorWithItems
 import com.example.dietprefs.model.Preference
+import com.example.dietprefs.model.SortColumn
+import com.example.dietprefs.model.SortDirection
+import com.example.dietprefs.model.SortState
+import com.example.dietprefs.network.models.VendorResponse
+import com.example.dietprefs.repository.VendorRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class SharedViewModel : ViewModel() {
+class SharedViewModel(
+    private val repository: VendorRepository = VendorRepository()
+) : ViewModel() {
+
+    // User preference state
     private val _user1Prefs = MutableStateFlow<Set<Preference>>(emptySet())
     val user1Prefs: StateFlow<Set<Preference>> = _user1Prefs.asStateFlow()
 
     private val _user2Prefs = MutableStateFlow<Set<Preference>>(emptySet())
     val user2Prefs: StateFlow<Set<Preference>> = _user2Prefs.asStateFlow()
 
-
-    private val _fullDisplayVendors = MutableStateFlow<List<DisplayVendor>>(emptyList())
+    // Vendor results state
     private val _pagedVendors = MutableStateFlow<List<DisplayVendor>>(emptyList())
     val pagedVendors: StateFlow<List<DisplayVendor>> = _pagedVendors.asStateFlow()
 
@@ -32,17 +34,29 @@ class SharedViewModel : ViewModel() {
     private val _visibleRange = MutableStateFlow(0 to 0)
     val visibleRange: StateFlow<Pair<Int, Int>> = _visibleRange.asStateFlow()
 
-    private var currentPage = 0
-    private val pageSize = 10
+    // Caching for local sort operations - stores all fetched vendors
+    private var cachedAllVendors = listOf<DisplayVendor>()
 
-    // --- SORTING STATE --- (UNCOMMENTED)
-    private val _sortState = MutableStateFlow(SortState()) // Default sort from SortType.kt
+    // Pagination state
+    private var currentPage = 1  // API uses 1-based indexing
+    private val pageSize = 10
+    private var totalPages = 0
+
+    // Sorting state
+    private val _sortState = MutableStateFlow(SortState())
     val sortState: StateFlow<SortState> = _sortState.asStateFlow()
 
-
-    // --- LOADING STATE ---
+    // Loading state
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    // Error state
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    // User location (can be updated if we add location services)
+    private var userLat: Double? = null
+    private var userLng: Double? = null
 
     fun updateVisibleRange(start: Int, end: Int) {
         _visibleRange.value = start to end
@@ -56,9 +70,6 @@ class SharedViewModel : ViewModel() {
             currentPrefs.add(pref)
         }
         _user1Prefs.value = currentPrefs
-        // Re-calculate results when preferences change
-        // You'll need access to the db instance here, or trigger it from where db is available
-        // For now, assuming loadAndComputeResults will be called externally after pref change
     }
 
     fun toggleUser2Pref(pref: Preference) {
@@ -76,13 +87,15 @@ class SharedViewModel : ViewModel() {
         _user2Prefs.value = emptySet()
     }
 
-
-    // --- SORTING FUNCTION --- (UNCOMMENTED)
     fun updateSortState(column: SortColumn) {
         val currentSort = _sortState.value
         val newDirection = if (currentSort.column == column) {
             // Toggle direction if same column is clicked
-            if (currentSort.direction == SortDirection.ASCENDING) SortDirection.DESCENDING else SortDirection.ASCENDING
+            if (currentSort.direction == SortDirection.ASCENDING) {
+                SortDirection.DESCENDING
+            } else {
+                SortDirection.ASCENDING
+            }
         } else {
             // Default direction for new columns
             when (column) {
@@ -92,134 +105,135 @@ class SharedViewModel : ViewModel() {
             }
         }
         _sortState.value = SortState(column, newDirection)
-        // Re-apply sort and pagination to the existing full list
-        applySortAndPagination(_fullDisplayVendors.value)
+        // Re-search with new sort parameters
+        searchVendors()
     }
 
-
-    fun loadAndComputeResults(db: AppDatabase) {
+    fun searchVendors() {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorMessage.value = null
+
             try {
-                val allVendorsWithItems = db.vendorDao().getVendorsWithItems()
-                computeAndProcessResults(allVendorsWithItems)
+                // Convert preferences to API format
+                val user1ApiPrefs = _user1Prefs.value
+                    .filter { it.hasApiSupport } // Exclude preferences without API support (e.g., LOW_PRICE)
+                    .map { it.apiName }
+
+                val user2ApiPrefs = _user2Prefs.value
+                    .filter { it.hasApiSupport }
+                    .map { it.apiName }
+
+                // Convert sort state to API format
+                val sortBy = when (_sortState.value.column) {
+                    SortColumn.VENDOR_RATING -> "rating"
+                    SortColumn.DISTANCE -> "distance"
+                    SortColumn.MENU_ITEMS -> "item_count"
+                }
+
+                val sortDirection = when (_sortState.value.direction) {
+                    SortDirection.ASCENDING -> "asc"
+                    SortDirection.DESCENDING -> "desc"
+                }
+
+                // Reset to first page
+                currentPage = 1
+
+                val result = repository.searchVendors(
+                    user1Preferences = user1ApiPrefs,
+                    user2Preferences = user2ApiPrefs,
+                    latitude = userLat,
+                    longitude = userLng,
+                    sortBy = sortBy,
+                    sortDirection = sortDirection,
+                    page = currentPage,
+                    pageSize = pageSize
+                )
+
+                result.onSuccess { response ->
+                    _totalResultsCount.value = response.pagination.totalResults
+                    totalPages = response.pagination.totalPages
+
+                    // Convert API response to DisplayVendor
+                    val displayVendors = response.vendors.map { it.toDisplayVendor() }
+                    _pagedVendors.value = displayVendors
+                }.onFailure { exception ->
+                    _errorMessage.value = exception.message ?: "Unknown error occurred"
+                    _pagedVendors.value = emptyList()
+                    _totalResultsCount.value = 0
+                }
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    private fun computeAndProcessResults(allVendorsWithItems: List<VendorWithItems>) {
-        val u1Prefs = _user1Prefs.value
-        val u2Prefs = _user2Prefs.value
-
-        val isUser1Active = u1Prefs.isNotEmpty()
-        val isUser2Active = u2Prefs.isNotEmpty()
-
-        val processedVendors = allVendorsWithItems.mapNotNull { vendorWithItems ->
-            val vendor = vendorWithItems.vendor
-            val items = vendorWithItems.items
-
-            val user1MatchingItems = if (isUser1Active) items.filter { item -> matchesPrefs(u1Prefs, item) } else emptyList()
-            val user2MatchingItems = if (isUser2Active) items.filter { item -> matchesPrefs(u2Prefs, item) } else emptyList()
-
-            val relevantItemsForQuery = when {
-                isUser1Active && isUser2Active -> (user1MatchingItems + user2MatchingItems).distinct()
-                isUser1Active -> user1MatchingItems
-                isUser2Active -> user2MatchingItems
-                else -> items
-            }
-
-            if ((isUser1Active || isUser2Active) && relevantItemsForQuery.isEmpty()) {
-                null
-            } else {
-                val sumApplicableUpvotes = relevantItemsForQuery.sumOf { it.upvotes }
-                val sumApplicableTotalVotes = relevantItemsForQuery.sumOf { it.totalVotes }
-
-                val querySpecificRatingString: String
-                val querySpecificRatingValue: Float
-
-                if (sumApplicableTotalVotes > 0) {
-                    querySpecificRatingString = "$sumApplicableUpvotes / $sumApplicableTotalVotes"
-                    querySpecificRatingValue = sumApplicableUpvotes.toFloat() / sumApplicableTotalVotes.toFloat()
-                } else {
-                    querySpecificRatingString = "0 / 0"
-                    querySpecificRatingValue = 0f
-                }
-
-                val combinedRelevantItemCount = relevantItemsForQuery.size
-
-                DisplayVendor(
-                    vendorName = vendor.name,
-                    user1Count = user1MatchingItems.size,
-                    user2Count = user2MatchingItems.size,
-                    distanceMiles = vendor.lat / 1000.0, // REMINDER: Replace with actual distance
-                    querySpecificRatingString = querySpecificRatingString,
-                    querySpecificRatingValue = querySpecificRatingValue,
-                    combinedRelevantItemCount = combinedRelevantItemCount
-                )
-            }
-        }
-
-        // _fullDisplayVendors.value = processedVendors // This will be set in applySortAndPagination
-        // _totalResultsCount.value = processedVendors.size // This will be set in applySortAndPagination
-
-        // MODIFIED: Call applySortAndPagination instead of resetAndLoadFirstPage directly
-        applySortAndPagination(processedVendors)
-    }
-
-
-    private fun applySortAndPagination(vendors: List<DisplayVendor>) {
-        // --- SORTING LOGIC --- (UNCOMMENTED and using querySpecificRatingValue)
-        val sortedVendors = when (_sortState.value.column) {
-            SortColumn.VENDOR_RATING -> {
-                if (_sortState.value.direction == SortDirection.ASCENDING) {
-                    vendors.sortedBy { it.querySpecificRatingValue } // Sort by the float value
-                } else {
-                    vendors.sortedByDescending { it.querySpecificRatingValue } // Sort by the float value
-                }
-            }
-            SortColumn.DISTANCE -> {
-                if (_sortState.value.direction == SortDirection.ASCENDING) {
-                    vendors.sortedBy { it.distanceMiles }
-                } else {
-                    vendors.sortedByDescending { it.distanceMiles }
-                }
-            }
-            SortColumn.MENU_ITEMS -> {
-                // Sorting by combinedRelevantItemCount
-                if (_sortState.value.direction == SortDirection.ASCENDING) {
-                    vendors.sortedBy { it.combinedRelevantItemCount }
-                } else {
-                    vendors.sortedByDescending { it.combinedRelevantItemCount }
-                }
-            }
-        }
-        _fullDisplayVendors.value = sortedVendors // Update the full list with the NOW SORTED order
-        resetAndLoadFirstPage(sortedVendors) // Then paginate from the sorted list
-    }
-
-
-    private fun resetAndLoadFirstPage(vendors: List<DisplayVendor>) {
-        currentPage = 0
-        _pagedVendors.value = vendors.take(pageSize)
-        _totalResultsCount.value = vendors.size
-    }
-
     fun loadNextPage() {
-        // Ensure that we use the _fullDisplayVendors (which is sorted) as the source for next pages
-        if ((currentPage + 1) * pageSize < _fullDisplayVendors.value.size) {
-            currentPage++
-            // It's usually better to rebuild the paged list rather than adding to a mutable list
-            // to ensure Compose recomposes correctly with a new list instance.
-            _pagedVendors.value = _fullDisplayVendors.value.take((currentPage + 1) * pageSize)
+        if (currentPage >= totalPages || _isLoading.value) return
+
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            try {
+                currentPage++
+
+                val user1ApiPrefs = _user1Prefs.value
+                    .filter { it.hasApiSupport }
+                    .map { it.apiName }
+
+                val user2ApiPrefs = _user2Prefs.value
+                    .filter { it.hasApiSupport }
+                    .map { it.apiName }
+
+                val sortBy = when (_sortState.value.column) {
+                    SortColumn.VENDOR_RATING -> "rating"
+                    SortColumn.DISTANCE -> "distance"
+                    SortColumn.MENU_ITEMS -> "item_count"
+                }
+
+                val sortDirection = when (_sortState.value.direction) {
+                    SortDirection.ASCENDING -> "asc"
+                    SortDirection.DESCENDING -> "desc"
+                }
+
+                val result = repository.searchVendors(
+                    user1Preferences = user1ApiPrefs,
+                    user2Preferences = user2ApiPrefs,
+                    latitude = userLat,
+                    longitude = userLng,
+                    sortBy = sortBy,
+                    sortDirection = sortDirection,
+                    page = currentPage,
+                    pageSize = pageSize
+                )
+
+                result.onSuccess { response ->
+                    // Append new vendors to existing list
+                    val newVendors = response.vendors.map { it.toDisplayVendor() }
+                    _pagedVendors.value = _pagedVendors.value + newVendors
+                }.onFailure { exception ->
+                    _errorMessage.value = exception.message ?: "Error loading next page"
+                    currentPage-- // Revert page increment on failure
+                }
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
-    private fun matchesPrefs(prefs: Set<Preference>, item: ItemEntity): Boolean {
-        if (prefs.isEmpty()) return true
-        return prefs.all { pref ->
-            pref.matcher?.invoke(item) ?: true
-        }
+    fun clearError() {
+        _errorMessage.value = null
+    }
+
+    private fun VendorResponse.toDisplayVendor(): DisplayVendor {
+        return DisplayVendor(
+            vendorName = this.name,
+            user1Count = this.itemCounts.user1Matches,
+            user2Count = this.itemCounts.user2Matches,
+            distanceMiles = this.distanceMiles ?: 0.0,
+            querySpecificRatingString = "${this.rating.upvotes} / ${this.rating.totalVotes}",
+            querySpecificRatingValue = this.rating.percentage,
+            combinedRelevantItemCount = this.itemCounts.totalRelevant
+        )
     }
 }

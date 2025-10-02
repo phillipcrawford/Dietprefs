@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.example.dietprefs.data.AppDatabase
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -64,10 +63,10 @@ fun PreferenceScreen(
             ) {
                 Button(
                     onClick = {
-                        // 1. Call loadAndComputeResults from SharedViewModel
-                        sharedViewModel.loadAndComputeResults(AppDatabase.getDatabase(context)) // <<< MODIFY THIS
-                        // 2. Then, execute the original navigation action
-                        onSearchClick() // <<< This was the original content of onClick },
+                        // Call searchVendors to query the backend API
+                        sharedViewModel.searchVendors()
+                        // Then navigate to search results
+                        onSearchClick()
                     },
                     modifier = Modifier
                         .weight(1f)

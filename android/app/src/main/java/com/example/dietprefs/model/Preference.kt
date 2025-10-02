@@ -1,56 +1,51 @@
 package com.example.dietprefs.model
 
-import com.example.dietprefs.data.ItemEntity
-
 /**
  * One source of truth for every preference:
  *  - display: what the user sees on the UI
- *  - matcher: how to check an ItemEntity. If null (e.g. "low price"), we ignore it in filtering.
+ *  - apiName: the name used in the backend API (snake_case format)
+ *  - hasApiSupport: whether this preference is supported by the backend API
  */
 enum class Preference(
     val display: String,
-    val matcher: ((ItemEntity) -> Boolean)?
+    val apiName: String,
+    val hasApiSupport: Boolean = true
 ) {
-    VEGETARIAN("vegetarian", { it.vegetarian }),
-    PESCETARIAN("pescetarian", { it.pescetarian }),
-    VEGAN("vegan", { it.vegan }),
-    KETO("keto", { it.keto }),
-    ORGANIC("organic", { it.organic }),
-    GMO_FREE("gmo-free", { it.gmoFree }),
-    LOCALLY_SOURCED("locally sourced", { it.locallySourced }),
-    RAW("raw", { it.raw }),
-    ENTREE("entree", { it.entree }),
-    SWEET("sweet", { it.sweet }),
-    KOSHER("Kosher", { it.kosher }),
-    HALAL("Halal", { it.halal }),
-    BEEF("beef", { it.beef }),
-    CHICKEN("chicken", { it.chicken }),
-    PORK_FAMILY("bacon/pork/ham", { it.pork }),
-    SEAFOOD("seafood", { it.seafood }),
-    LOW_SUGAR("low sugar", { it.lowSugar }),
-    HIGH_PROTEIN("high protein", { it.highProtein }),
-    LOW_CARB("low carb", { it.lowCarb }),
-    NO_ALLIUMS("no alliums", { it.noAlliums }),
-    NO_PORK_PRODUCTS("no pork products", { it.noPorkProducts }),
-    NO_RED_MEAT("no red meat", { it.noRedMeat }),
-    NO_MSG("no msg", { it.noMsg }),
-    NO_SESAME("no sesame", { it.noSesame }),
-    NO_MILK("no milk", { it.noMilk }),
-    NO_EGGS("no eggs", { it.noEggs }),
-    NO_FISH("no fish", { it.noFish }),
-    NO_SHELLFISH("no shellfish", { it.noShellfish }),
-    NO_PEANUTS("no peanuts", { it.noPeanuts }),
-    NO_TREENUTS("no treenuts", { it.noTreenuts }),
-    GLUTEN_FREE("gluten-free", { it.glutenFree }),
-    NO_SOY("no soy", { it.noSoy }),
+    VEGETARIAN("vegetarian", "vegetarian"),
+    PESCETARIAN("pescetarian", "pescetarian"),
+    VEGAN("vegan", "vegan"),
+    KETO("keto", "keto"),
+    ORGANIC("organic", "organic"),
+    GMO_FREE("gmo-free", "gmo_free"),
+    LOCALLY_SOURCED("locally sourced", "locally_sourced"),
+    RAW("raw", "raw"),
+    ENTREE("entree", "entree"),
+    SWEET("sweet", "sweet"),
+    KOSHER("Kosher", "kosher"),
+    HALAL("Halal", "halal"),
+    BEEF("beef", "beef"),
+    CHICKEN("chicken", "chicken"),
+    PORK_FAMILY("bacon/pork/ham", "pork"),
+    SEAFOOD("seafood", "seafood"),
+    LOW_SUGAR("low sugar", "low_sugar"),
+    HIGH_PROTEIN("high protein", "high_protein"),
+    LOW_CARB("low carb", "low_carb"),
+    NO_ALLIUMS("no alliums", "no_alliums"),
+    NO_PORK_PRODUCTS("no pork products", "no_pork_products"),
+    NO_RED_MEAT("no red meat", "no_red_meat"),
+    NO_MSG("no msg", "no_msg"),
+    NO_SESAME("no sesame", "no_sesame"),
+    NO_MILK("no milk", "no_milk"),
+    NO_EGGS("no eggs", "no_eggs"),
+    NO_FISH("no fish", "no_fish"),
+    NO_SHELLFISH("no shellfish", "no_shellfish"),
+    NO_PEANUTS("no peanuts", "no_peanuts"),
+    NO_TREENUTS("no treenuts", "no_treenuts"),
+    GLUTEN_FREE("gluten-free", "gluten_free"),
+    NO_SOY("no soy", "no_soy"),
 
-    // Doesn't exist on ItemEntity; keep for UI, ignore in filtering.
-    LOW_PRICE("low price", null);
-
-    /** Returns true if this preference matches the item, or ignores if matcher == null */
-    fun matches(item: ItemEntity): Boolean {
-        return matcher?.invoke(item) ?: true
-    }
+    // Doesn't have backend API support
+    LOW_PRICE("low price", "low_price", hasApiSupport = false);
 
     companion object {
         /** Order them *exactly* as you want to show in PreferenceScreen. */
