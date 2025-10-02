@@ -82,7 +82,7 @@ def seed_database():
             # Use vendor ID to create different restaurant "specialties"
             for j in range(1, 8):
                 total_votes = random.randint(5, 51)
-                upvotes = random.randint(0, total_votes + 1)
+                upvotes = random.randint(0, total_votes)  # Fixed: upvotes should never exceed total_votes
 
                 # Each vendor has different probabilities for dietary options
                 # This makes some vendors more vegan-friendly, others more pescetarian, etc.

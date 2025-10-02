@@ -126,8 +126,13 @@ class VendorService:
 
             # Determine relevant items for rating calculation
             if is_user1_active and is_user2_active:
-                # Combine both users' matching items (distinct)
-                relevant_items = list(set(user1_matching_items + user2_matching_items))
+                # Combine both users' matching items (distinct by ID)
+                seen_ids = set()
+                relevant_items = []
+                for item in user1_matching_items + user2_matching_items:
+                    if item.id not in seen_ids:
+                        seen_ids.add(item.id)
+                        relevant_items.append(item)
             elif is_user1_active:
                 relevant_items = user1_matching_items
             elif is_user2_active:
@@ -143,7 +148,7 @@ class VendorService:
             # Calculate context-aware rating
             total_upvotes = sum(item.upvotes for item in relevant_items)
             total_votes = sum(item.total_votes for item in relevant_items)
-            rating_percentage = total_upvotes / total_votes if total_votes > 0 else 0.0
+            rating_percentage = min(total_upvotes / total_votes, 1.0) if total_votes > 0 else 0.0
 
             # Calculate distance if user location provided
             distance_miles = None
