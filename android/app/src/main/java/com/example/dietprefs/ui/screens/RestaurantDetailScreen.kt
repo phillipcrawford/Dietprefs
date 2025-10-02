@@ -99,7 +99,7 @@ fun RestaurantDetailScreen(
                         state = listState,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(400.dp) // Viewport for ~4 items
+                            .height(204.dp) // 60dp header + 48dp * 3 items = 204dp
                     ) {
                         // Item 0: Restaurant header
                         item {
@@ -172,7 +172,7 @@ fun RestaurantHeaderItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(60.dp) // 1.25x of 48dp
             .background(backgroundColor),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -206,9 +206,9 @@ fun MenuItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(48.dp) // Match SearchResultsScreen vendor height
             .background(backgroundColor)
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
