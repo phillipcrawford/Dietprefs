@@ -69,11 +69,18 @@ cd android
 
 ## Current Status
 
-✅ Backend API complete and ready for deployment
-🚧 Android app uses local Room database (migrating to API)
-❌ iOS and Web clients not started
+✅ **Backend API deployed and live**: https://dietprefs-production.up.railway.app
+✅ **Database seeded** with 20 vendors and 140 menu items
+🚧 **Android app** uses local Room database (Phase 2: migrating to API)
+❌ **iOS and Web clients** not started
 
 See [docs/CLAUDE.md](docs/CLAUDE.md) for detailed status and roadmap.
+
+## Live API
+
+**Production URL**: https://dietprefs-production.up.railway.app
+**API Docs**: https://dietprefs-production.up.railway.app/docs
+**Health Check**: https://dietprefs-production.up.railway.app/health
 
 ## License
 

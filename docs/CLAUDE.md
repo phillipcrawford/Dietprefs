@@ -78,16 +78,17 @@ Menu items with extensive dietary/allergen flags:
 
 ### ✅ Completed
 
-**Backend (FastAPI + PostgreSQL)**:
-- Complete REST API with all endpoints (see `BACKEND_SUMMARY.md`)
-- Vendor search with dual-user preference filtering
-- Context-aware rating calculations
-- Distance calculations (Haversine formula)
-- Sorting and pagination
-- Database models with 33 dietary flags
-- Seed data script (20 vendors × 7 items)
-- Deployment documentation for Railway/Render/Heroku
-- Ready for production deployment
+**Backend (FastAPI + PostgreSQL)** - **✅ DEPLOYED AND LIVE**:
+- ✅ Complete REST API with all endpoints (see `BACKEND_SUMMARY.md`)
+- ✅ Vendor search with dual-user preference filtering
+- ✅ Context-aware rating calculations
+- ✅ Distance calculations (Haversine formula)
+- ✅ Sorting and pagination
+- ✅ Database models with 33 dietary flags
+- ✅ **Production URL**: https://dietprefs-production.up.railway.app
+- ✅ **PostgreSQL database** connected and operational
+- ✅ **Database seeded** with 20 vendors and 140 menu items
+- ✅ **All endpoints tested** via Swagger UI and working
 
 **Android (Jetpack Compose + Room)**:
 - Preference selection UI with dual-user mode
@@ -210,14 +211,15 @@ See `architecture.md` for detailed implementation plan.
 
 ## Recent Work Context
 
-### 2025-10-01: Backend Complete ✅
+### 2025-10-01: Backend Deployed ✅
+
 - **Architecture Planning**:
   - Created `architecture.md` with complete multi-platform specifications
   - Updated `CLAUDE.md` to reflect backend-first strategy
   - Decided on Python FastAPI + PostgreSQL + Railway stack
 
 - **Backend Implementation** (Complete):
-  - Built complete FastAPI REST API (`dietprefs-backend/`)
+  - Built complete FastAPI REST API (`backend/` directory)
   - Implemented all 4 API endpoints with full functionality
   - Created SQLAlchemy models (Vendor + Item with 33 dietary flags)
   - Implemented complex filtering logic with AND logic in `VendorService`
@@ -225,8 +227,18 @@ See `architecture.md` for detailed implementation plan.
   - Haversine distance calculations
   - Sorting (rating/distance/item_count) and pagination
   - Database seeding script (20 vendors × 7 items = 140 items)
-  - Created comprehensive deployment docs (Railway/Render/Heroku)
-  - Ready for production deployment
+
+- **Deployment** (Complete):
+  - ✅ **Deployed to Railway**: https://dietprefs-production.up.railway.app
+  - ✅ PostgreSQL database connected
+  - ✅ Database seeded with test data
+  - ✅ All endpoints tested and verified working
+  - ✅ API documentation live at `/docs`
+
+- **Repository Restructure**:
+  - Reorganized to clean monorepo: `android/`, `backend/`, `docs/`
+  - Removed old `dietprefs-backend/` directory
+  - Updated all cross-references in documentation
 
 - **Rollback Point**: Commit `12032ae` ("distance text to white") - last commit before backend work
 

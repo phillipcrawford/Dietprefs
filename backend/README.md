@@ -2,12 +2,18 @@
 
 FastAPI backend for Dietprefs food vendor discovery app.
 
+## 🚀 Live Production API
+
+**Base URL**: https://dietprefs-production.up.railway.app
+**API Docs**: https://dietprefs-production.up.railway.app/docs
+**Health Check**: https://dietprefs-production.up.railway.app/health
+
 ## Tech Stack
 - **Framework**: FastAPI
 - **Database**: PostgreSQL
 - **ORM**: SQLAlchemy
 - **Migrations**: Alembic
-- **Deployment**: Railway
+- **Deployment**: Railway (deployed and live)
 
 ## Setup
 

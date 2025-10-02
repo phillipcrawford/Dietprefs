@@ -1,7 +1,11 @@
 # Backend Implementation Summary
 
 **Date**: 2025-10-01
-**Status**: ✅ Backend Complete - Ready for Testing
+**Status**: ✅ Backend Complete - **DEPLOYED AND LIVE**
+
+**Production URL**: https://dietprefs-production.up.railway.app
+**API Documentation**: https://dietprefs-production.up.railway.app/docs
+**Health Check**: https://dietprefs-production.up.railway.app/health
 
 ---
 
