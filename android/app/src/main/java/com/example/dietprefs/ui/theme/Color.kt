@@ -24,3 +24,7 @@ val selectedTeal = Color(0xFF008080)
 
 // Rating background colors
 val upvoteGreen = Color(0xFF416831)       // Green for upvotes section
+
+// Restaurant detail colors
+val restaurantSelectedGold = Color(0xFFFFD24D)    // Selected restaurant header
+val restaurantDeselectedGold = Color(0xFFCC9900)  // Deselected restaurant header

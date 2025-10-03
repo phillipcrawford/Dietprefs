@@ -27,6 +27,8 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.dietprefs.ui.components.TopBar
 import com.example.dietprefs.ui.theme.backgroundGrey
+import com.example.dietprefs.ui.theme.restaurantSelectedGold
+import com.example.dietprefs.ui.theme.restaurantDeselectedGold
 import com.example.dietprefs.viewmodel.SharedViewModel
 
 @Composable
@@ -167,7 +169,7 @@ fun RestaurantHeaderItem(
     vendor: com.example.dietprefs.network.models.VendorResponse,
     isSelected: Boolean
 ) {
-    val backgroundColor = if (isSelected) Color(0xFFFFD700) else Color(0xFFB8860B) // Bright yellow vs muted yellow
+    val backgroundColor = if (isSelected) restaurantSelectedGold else restaurantDeselectedGold
 
     Box(
         modifier = Modifier
