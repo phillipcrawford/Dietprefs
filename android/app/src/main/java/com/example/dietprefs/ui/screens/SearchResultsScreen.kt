@@ -110,8 +110,9 @@ fun SearchResultsScreen(
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
+                .background(backgroundGrey)
+                .padding(innerPadding)
         ) {
             // Visual separator between top bar and table header
             HorizontalDivider(
