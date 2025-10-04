@@ -355,7 +355,7 @@ class SharedViewModel(
             user1Count = this.itemCounts.user1Matches,
             user2Count = this.itemCounts.user2Matches,
             distanceMiles = this.distanceMiles ?: 0.0,
-            querySpecificRatingString = "${this.rating.upvotes} / ${this.rating.totalVotes}",
+            querySpecificRatingString = "${this.rating.upvotes}/${this.rating.totalVotes}",
             querySpecificRatingValue = this.rating.percentage,
             combinedRelevantItemCount = this.itemCounts.totalRelevant
         )
