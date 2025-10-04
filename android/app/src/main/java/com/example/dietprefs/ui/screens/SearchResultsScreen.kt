@@ -382,6 +382,7 @@ fun SearchResultsScreen(
                                     text = vendor.vendorName,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
+                                    color = Color.White,
                                     modifier = Modifier
                                         .align(Alignment.TopStart)
                                         .padding(start = 16.dp, top = 10.dp, bottom = 10.dp)
