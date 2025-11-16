@@ -390,7 +390,7 @@ fun SearchResultsScreen(
 
                                 // Rating String - Aligned to TopEnd (Top Right)
                                 Text(
-                                    text = "Rating: ${vendor.querySpecificRatingString}",
+                                    text = vendor.querySpecificRatingString,
                                     fontSize = 13.sp,
                                     color = Color.Gray,
                                     modifier = Modifier

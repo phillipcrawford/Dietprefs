@@ -54,8 +54,11 @@ fun RestaurantDetailScreen(
     }
 
     // Track scroll position to determine selected index
-    LaunchedEffect(listState.firstVisibleItemIndex) {
-        sharedViewModel.updateSelectedItemIndex(listState.firstVisibleItemIndex)
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.isScrollInProgress) {
+        // Only update when not actively scrolling to reduce recompositions
+        if (!listState.isScrollInProgress) {
+            sharedViewModel.updateSelectedItemIndex(listState.firstVisibleItemIndex)
+        }
     }
 
     Scaffold(
@@ -185,11 +188,6 @@ fun RestaurantHeaderItem(
                 text = vendor.name,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            Text(
-                text = "Rating: ${vendor.rating.upvotes}/${vendor.rating.totalVotes}",
-                fontSize = 16.sp,
                 color = Color.Black
             )
         }
