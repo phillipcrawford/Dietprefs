@@ -71,9 +71,9 @@ class LocationService(private val context: Context) {
             // Permission was revoked during execution
             null
         } catch (e: Exception) {
-            // Location unavailable - return San Francisco for testing in emulator
+            // Location unavailable - return Bozeman, MT for testing in emulator
             // TODO: Remove this fallback for production
-            UserLocation(latitude = 37.7749, longitude = -122.4194)
+            UserLocation(latitude = 45.6770, longitude = -111.0429)
         }
     }
 
@@ -103,20 +103,20 @@ class LocationService(private val context: Context) {
             val location: Location? = fusedLocationClient.lastLocation.await()
 
             // TODO: Remove this hardcoded location for production
-            // For emulator testing, always return San Francisco to match test data
-            UserLocation(latitude = 37.7749, longitude = -122.4194)
+            // For emulator testing, always return Bozeman, MT to match test data
+            UserLocation(latitude = 45.6770, longitude = -111.0429)
 
             // Production code (currently disabled for testing):
             // location?.let {
             //     UserLocation(latitude = it.latitude, longitude = it.longitude)
-            // } ?: UserLocation(latitude = 37.7749, longitude = -122.4194)
+            // } ?: UserLocation(latitude = 45.6770, longitude = -111.0429)
         } catch (e: SecurityException) {
             // Permission was revoked during execution
             null
         } catch (e: Exception) {
-            // Location unavailable - return San Francisco for testing in emulator
+            // Location unavailable - return Bozeman, MT for testing in emulator
             // TODO: Remove this fallback for production
-            UserLocation(latitude = 37.7749, longitude = -122.4194)
+            UserLocation(latitude = 45.6770, longitude = -111.0429)
         }
     }
 }
