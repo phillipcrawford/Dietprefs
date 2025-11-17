@@ -30,9 +30,12 @@ def seed_database():
 
         print("Seeding database with test data...")
 
-        # Test location: San Francisco (37.7749, -122.4194)
+        # Test location: Bozeman, MT (45.6770, -111.0429)
         # Spread vendors across different distances to test 10-mile filter
         # ~0.014 degrees latitude/longitude ≈ 1 mile
+        # Bozeman zipcodes: 59715, 59718, 59771, 59772
+        bozeman_zips = [59715, 59718, 59771, 59772]
+
         for i in range(1, 21):  # 20 vendors
             # Vendors 1-10: Within 5 miles (should appear in results)
             # Vendors 11-15: 5-10 miles (should appear in results)
@@ -54,11 +57,11 @@ def seed_database():
 
             vendor = Vendor(
                 name=f"Vendor {i}",
-                lat=37.7749 + lat_offset,  # San Francisco center
-                lng=-122.4194 + lng_offset,
-                address=f"{100 + i * 10} Main St, San Francisco, CA",
-                zipcode=94100 + i,
-                phone=f"415555{i:04d}",
+                lat=45.6770 + lat_offset,  # Bozeman, MT center
+                lng=-111.0429 + lng_offset,
+                address=f"{100 + i * 10} Main St, Bozeman, MT",
+                zipcode=bozeman_zips[i % len(bozeman_zips)],
+                phone=f"406555{i:04d}",
                 website=f"https://vendor{i}.example.com",
                 hours='{"monday": "10:00-22:00", "tuesday": "10:00-22:00"}',
                 seo_tags="food,restaurants,dining",
