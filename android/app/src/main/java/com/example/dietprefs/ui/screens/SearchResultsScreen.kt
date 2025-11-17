@@ -392,7 +392,7 @@ fun SearchResultsScreen(
                                 Text(
                                     text = vendor.querySpecificRatingString,
                                     fontSize = 13.sp,
-                                    color = Color.Gray,
+                                    color = Color.White,
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
                                         .padding(end = 16.dp, top = 10.dp, bottom = 10.dp)
