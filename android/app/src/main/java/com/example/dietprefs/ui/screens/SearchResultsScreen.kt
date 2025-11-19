@@ -423,12 +423,14 @@ fun SearchResultsScreen(
                                     Text(
                                         text = "${vendor.user1Count} | ${vendor.user2Count}",
                                         fontSize = 14.sp,
+                                        color = Color.White,
                                         textAlign = TextAlign.Center
                                     )
                                 } else { // Single user mode or no users with preferences
                                     Text(
                                         text = "${vendor.combinedRelevantItemCount}",
                                         fontSize = 14.sp,
+                                        color = Color.White,
                                         textAlign = TextAlign.Center
                                     )
                                 }
