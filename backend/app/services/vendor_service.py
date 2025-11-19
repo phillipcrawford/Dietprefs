@@ -72,11 +72,16 @@ class VendorService:
         return round(distance, 2)
 
     @staticmethod
-    def item_matches_preferences(item: Item, preferences: List[str]) -> bool:
+    def item_matches_preferences(item: Item, preferences: List[str], max_price: Optional[float] = None) -> bool:
         """
-        Check if an item matches ALL given preferences (AND logic).
+        Check if an item matches ALL given preferences (AND logic) and price constraint.
         Returns True if all preferences match or if preferences list is empty.
         """
+        # Check price constraint first
+        if max_price is not None and item.price is not None:
+            if item.price > max_price:
+                return False
+
         if not preferences:
             return True
 
@@ -93,12 +98,15 @@ class VendorService:
         return True
 
     @staticmethod
-    def _build_preference_filter(preferences: List[str]):
-        """Build SQL filter for items matching ALL preferences (AND logic)."""
-        if not preferences:
-            return None
-
+    def _build_preference_filter(preferences: List[str], max_price: Optional[float] = None):
+        """Build SQL filter for items matching ALL preferences (AND logic) and price constraint."""
         filters = []
+
+        # Add price filter if provided
+        if max_price is not None:
+            filters.append(Item.price <= max_price)
+
+        # Add preference filters
         for pref in preferences:
             field_name = VendorService.PREFERENCE_FIELD_MAP.get(pref.lower())
             if field_name:
@@ -136,11 +144,15 @@ class VendorService:
                 Vendor.lng.between(request.lng - lng_delta, request.lng + lng_delta)
             )
 
-        # If preferences are active, filter to vendors that have at least one matching item
-        if is_user1_active or is_user2_active:
-            # Build filters for each user
-            user1_filter = VendorService._build_preference_filter(user1_prefs)
-            user2_filter = VendorService._build_preference_filter(user2_prefs)
+        # Check if price filters or preferences are active
+        user1_has_price = request.user1_max_price is not None
+        user2_has_price = request.user2_max_price is not None
+
+        # If preferences or price filters are active, filter to vendors that have at least one matching item
+        if is_user1_active or is_user2_active or user1_has_price or user2_has_price:
+            # Build filters for each user (including price)
+            user1_filter = VendorService._build_preference_filter(user1_prefs, request.user1_max_price)
+            user2_filter = VendorService._build_preference_filter(user2_prefs, request.user2_max_price)
 
             # Combine with OR: vendor must have items matching user1 OR user2
             if user1_filter is not None and user2_filter is not None:
@@ -151,7 +163,8 @@ class VendorService:
                 combined_filter = user2_filter
 
             # Join with items and filter
-            query = query.join(Item).filter(combined_filter).distinct()
+            if combined_filter is not None:
+                query = query.join(Item).filter(combined_filter).distinct()
 
         # Execute query to get vendors (with items eagerly loaded)
         vendors = query.all()
@@ -164,13 +177,13 @@ class VendorService:
             user2_matching_items = []
 
             for item in vendor.items:
-                if is_user1_active and VendorService.item_matches_preferences(item, user1_prefs):
+                if (is_user1_active or user1_has_price) and VendorService.item_matches_preferences(item, user1_prefs, request.user1_max_price):
                     user1_matching_items.append(item)
-                if is_user2_active and VendorService.item_matches_preferences(item, user2_prefs):
+                if (is_user2_active or user2_has_price) and VendorService.item_matches_preferences(item, user2_prefs, request.user2_max_price):
                     user2_matching_items.append(item)
 
             # Determine relevant items for rating calculation
-            if is_user1_active and is_user2_active:
+            if (is_user1_active or user1_has_price) and (is_user2_active or user2_has_price):
                 # Combine both users' matching items (distinct by ID)
                 seen_ids = set()
                 relevant_items = []
@@ -178,16 +191,16 @@ class VendorService:
                     if item.id not in seen_ids:
                         seen_ids.add(item.id)
                         relevant_items.append(item)
-            elif is_user1_active:
+            elif is_user1_active or user1_has_price:
                 relevant_items = user1_matching_items
-            elif is_user2_active:
+            elif is_user2_active or user2_has_price:
                 relevant_items = user2_matching_items
             else:
-                # No preferences selected, all items are relevant
+                # No preferences or price filters selected, all items are relevant
                 relevant_items = vendor.items
 
-            # Skip vendor if no relevant items found (when preferences are active)
-            if (is_user1_active or is_user2_active) and len(relevant_items) == 0:
+            # Skip vendor if no relevant items found (when preferences or price filters are active)
+            if (is_user1_active or is_user2_active or user1_has_price or user2_has_price) and len(relevant_items) == 0:
                 continue
 
             # Calculate context-aware rating

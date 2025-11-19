@@ -90,6 +90,8 @@ class VendorSearchRequest(BaseModel):
     """Request schema for vendor search endpoint."""
     user1_preferences: List[str] = Field(default_factory=list, description="Dietary preferences for user 1")
     user2_preferences: List[str] = Field(default_factory=list, description="Dietary preferences for user 2")
+    user1_max_price: Optional[float] = Field(None, description="Maximum price filter for user 1")
+    user2_max_price: Optional[float] = Field(None, description="Maximum price filter for user 2")
     lat: Optional[float] = Field(None, description="User latitude for distance calculation")
     lng: Optional[float] = Field(None, description="User longitude for distance calculation")
     sort_by: str = Field("item_count", description="Sort by: rating, distance, or item_count")
