@@ -416,8 +416,12 @@ fun SearchResultsScreen(
 
                             // Menu Item Counts (adapts to user mode)
                             Column(
-                                modifier = Modifier.weight(1f),
-                                horizontalAlignment = Alignment.CenterHorizontally // Center the text content
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .background(dietprefsGrey),
+                                horizontalAlignment = Alignment.CenterHorizontally, // Center the text content
+                                verticalArrangement = Arrangement.Center
                             ) {
                                 if (isTwoUserMode) {
                                     Text(
