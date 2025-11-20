@@ -57,7 +57,7 @@ def seed_database():
             lng_offset = distance_factor * random.choice([-1, 1]) * abs(math.sin(angle))
 
             vendor = Vendor(
-                name=f"Vendor {ij}",
+                name=f"Vendor {i}",
                 lat=45.6770 + lat_offset,  # Bozeman, MT center
                 lng=-111.0429 + lng_offset,
                 address=f"{100 + i * 10} Main St, Bozeman, MT",
