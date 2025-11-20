@@ -28,6 +28,13 @@ class SharedViewModel(
     private val _user2Prefs = MutableStateFlow<Set<Preference>>(emptySet())
     val user2Prefs: StateFlow<Set<Preference>> = _user2Prefs.asStateFlow()
 
+    // Price filter state
+    private val _user1MaxPrice = MutableStateFlow<Float?>(null)
+    val user1MaxPrice: StateFlow<Float?> = _user1MaxPrice.asStateFlow()
+
+    private val _user2MaxPrice = MutableStateFlow<Float?>(null)
+    val user2MaxPrice: StateFlow<Float?> = _user2MaxPrice.asStateFlow()
+
     // Vendor results state
     private val _pagedVendors = MutableStateFlow<List<DisplayVendor>>(emptyList())
     val pagedVendors: StateFlow<List<DisplayVendor>> = _pagedVendors.asStateFlow()
@@ -118,9 +125,19 @@ class SharedViewModel(
         _user2Prefs.value = currentPrefs
     }
 
+    fun setUser1MaxPrice(price: Float?) {
+        _user1MaxPrice.value = price
+    }
+
+    fun setUser2MaxPrice(price: Float?) {
+        _user2MaxPrice.value = price
+    }
+
     fun clearPrefs() {
         _user1Prefs.value = emptySet()
         _user2Prefs.value = emptySet()
+        _user1MaxPrice.value = null
+        _user2MaxPrice.value = null
     }
 
     fun updateSortState(column: SortColumn) {
@@ -225,6 +242,8 @@ class SharedViewModel(
                 val result = repository.searchVendors(
                     user1Preferences = user1ApiPrefs,
                     user2Preferences = user2ApiPrefs,
+                    user1MaxPrice = _user1MaxPrice.value,
+                    user2MaxPrice = _user2MaxPrice.value,
                     latitude = _userLocation.value?.latitude,
                     longitude = _userLocation.value?.longitude,
                     sortBy = sortBy,
@@ -298,6 +317,8 @@ class SharedViewModel(
                 val result = repository.searchVendors(
                     user1Preferences = user1ApiPrefs,
                     user2Preferences = user2ApiPrefs,
+                    user1MaxPrice = _user1MaxPrice.value,
+                    user2MaxPrice = _user2MaxPrice.value,
                     latitude = _userLocation.value?.latitude,
                     longitude = _userLocation.value?.longitude,
                     sortBy = sortBy,

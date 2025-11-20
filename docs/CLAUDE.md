@@ -69,6 +69,24 @@
 
 ## Recent Work (Reverse Chronological)
 
+### 2025-11-17: Price Filtering (In Progress) 🚧
+- **Backend Complete**: Added `user1_max_price` and `user2_max_price` to API
+- Server-side price filtering in SQL (`WHERE item.price <= max_price`)
+- Updated `vendor_service.py` to filter by price alongside other preferences
+- **Android Data Layer Complete**: Updated API models, repository, and ViewModel
+- **Still TODO**: Price input dialog UI on PreferenceScreen
+
+### 2025-11-17: Test Data Migration to Bozeman ✅
+- Updated seed data from San Francisco to Bozeman, MT coordinates
+- Changed test restaurant locations, addresses, zipcodes, phone area codes
+- Android LocationService now returns Bozeman coordinates for emulator testing
+- Reseeded Railway database with new Bozeman-centered data
+
+### 2025-11-17: UI Tweaks ✅
+- Fixed text colors in SearchResultsScreen (rating, menu items now white)
+- Added grey background to menu items column to match distance column
+- Railway deployment reactivated (paid plan after free trial expired)
+
 ### 2025-10-03: Restaurant Detail Screen Complete ✅
 - Extracted reusable TopBar component used across screens
 - Built scrollable stack with restaurant header (60dp) + menu items (48dp)
@@ -141,11 +159,12 @@
 - Python does per-user counting and ratings (acceptable for 10-50 results)
 - Sorting/pagination in memory (trivial for small result sets)
 
-**Test Data Quirk**:
-- 15 vendors within 10 miles, 5 beyond
+**Test Data**:
+- Location: Bozeman, MT (45.6770, -111.0429)
+- 20 test vendors: 15 within 10 miles, 5 beyond
 - Most vendors have vegetarian items (not realistic but fine for testing)
 - Need more specialized seed data for real testing
 
 ---
 
-**Last Updated**: 2025-10-03
+**Last Updated**: 2025-11-17

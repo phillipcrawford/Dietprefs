@@ -9,6 +9,10 @@ data class VendorSearchRequest(
     val user1Preferences: List<String> = emptyList(),
     @SerializedName("user2_preferences")
     val user2Preferences: List<String> = emptyList(),
+    @SerializedName("user1_max_price")
+    val user1MaxPrice: Float? = null,
+    @SerializedName("user2_max_price")
+    val user2MaxPrice: Float? = null,
     val lat: Double? = null,
     val lng: Double? = null,
     @SerializedName("sort_by")

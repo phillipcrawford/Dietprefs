@@ -14,6 +14,8 @@ class VendorRepository(
     suspend fun searchVendors(
         user1Preferences: List<String>,
         user2Preferences: List<String>,
+        user1MaxPrice: Float? = null,
+        user2MaxPrice: Float? = null,
         latitude: Double? = null,
         longitude: Double? = null,
         sortBy: String = "item_count",
@@ -25,6 +27,8 @@ class VendorRepository(
             val request = VendorSearchRequest(
                 user1Preferences = user1Preferences,
                 user2Preferences = user2Preferences,
+                user1MaxPrice = user1MaxPrice,
+                user2MaxPrice = user2MaxPrice,
                 lat = latitude,
                 lng = longitude,
                 sortBy = sortBy,

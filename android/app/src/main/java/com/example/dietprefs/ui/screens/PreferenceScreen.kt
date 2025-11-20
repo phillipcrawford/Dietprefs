@@ -44,11 +44,17 @@ fun PreferenceScreen(
     val context = LocalContext.current
     val user1Prefs by sharedViewModel.user1Prefs.collectAsState()
     val user2Prefs by sharedViewModel.user2Prefs.collectAsState()
+    val user1MaxPrice by sharedViewModel.user1MaxPrice.collectAsState()
+    val user2MaxPrice by sharedViewModel.user2MaxPrice.collectAsState()
     val isUser2Active = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val user1Selected = user1Prefs.map { it.display }
     val user2Selected = user2Prefs.map { it.display }
+
+    // Price dialog state
+    var showPriceDialog by remember { mutableStateOf(false) }
+    val priceOptions = remember { (5..30).map { it.toFloat() } }
 
     // Location permission launcher
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -189,11 +195,8 @@ fun PreferenceScreen(
                         .weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    val lowPricePref = Preference.LOW_PRICE
-                    val isLowPriceSelected = if (isUser2Active.value)
-                        user2Prefs.contains(lowPricePref)
-                    else
-                        user1Prefs.contains(lowPricePref)
+                    val currentMaxPrice = if (isUser2Active.value) user2MaxPrice else user1MaxPrice
+                    val isLowPriceSelected = currentMaxPrice != null
 
                     Box(
                         modifier = Modifier
@@ -204,17 +207,18 @@ fun PreferenceScreen(
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .clickable {
-                                if (isUser2Active.value) {
-                                    sharedViewModel.toggleUser2Pref(lowPricePref)
-                                } else {
-                                    sharedViewModel.toggleUser1Pref(lowPricePref)
-                                }
+                                // Open price dialog
+                                showPriceDialog = true
                             }
                             .padding(start = 12.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = lowPricePref.display,
+                            text = if (currentMaxPrice != null) {
+                                "low price $${"%.2f".format(currentMaxPrice)}"
+                            } else {
+                                "low price"
+                            },
                             color = Color.White,
                             fontSize = 16.sp
                         )
@@ -256,6 +260,89 @@ fun PreferenceScreen(
                 }
             }
         }
+    }
+
+    // Price Selection Dialog
+    if (showPriceDialog) {
+        AlertDialog(
+            onDismissRequest = { showPriceDialog = false },
+            title = {
+                Text(
+                    text = "Set Maximum Price",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Select maximum price:",
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    // Scrollable list of price options
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        priceOptions.forEach { price ->
+                            val currentMaxPrice = if (isUser2Active.value) user2MaxPrice else user1MaxPrice
+                            val isSelected = currentMaxPrice == price
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        if (isSelected) selectedGrey else Color.Transparent,
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .clickable {
+                                        if (isUser2Active.value) {
+                                            sharedViewModel.setUser2MaxPrice(price)
+                                        } else {
+                                            sharedViewModel.setUser1MaxPrice(price)
+                                        }
+                                        showPriceDialog = false
+                                    }
+                                    .padding(12.dp)
+                            ) {
+                                Text(
+                                    text = "$${"%.0f".format(price)}",
+                                    fontSize = 16.sp,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Clear price filter
+                        if (isUser2Active.value) {
+                            sharedViewModel.setUser2MaxPrice(null)
+                        } else {
+                            sharedViewModel.setUser1MaxPrice(null)
+                        }
+                        showPriceDialog = false
+                    }
+                ) {
+                    Text("Clear")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPriceDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+            containerColor = dietprefsGrey,
+            textContentColor = Color.White
+        )
     }
 }
 
