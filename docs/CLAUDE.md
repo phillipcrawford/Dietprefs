@@ -69,12 +69,18 @@
 
 ## Recent Work (Reverse Chronological)
 
-### 2025-11-17: Price Filtering (In Progress) 🚧
-- **Backend Complete**: Added `user1_max_price` and `user2_max_price` to API
+### 2025-11-19: Dual-User Filtering Bug Fix ✅
+- Fixed bug where vendors showed "0 items" for one user when both had filters
+- Added AND logic enforcement: when both users have filters (preferences/price), vendor must have items for BOTH users
+- Change in `vendor_service.py:185-188` - vendors now skipped if either user has 0 matches
+- Ensures better UX in dual-user mode
+
+### 2025-11-17: Price Filtering Complete ✅
+- **Backend**: Added `user1_max_price` and `user2_max_price` to API
 - Server-side price filtering in SQL (`WHERE item.price <= max_price`)
 - Updated `vendor_service.py` to filter by price alongside other preferences
-- **Android Data Layer Complete**: Updated API models, repository, and ViewModel
-- **Still TODO**: Price input dialog UI on PreferenceScreen
+- **Android**: Updated API models, repository, and ViewModel
+- Price input dialog UI on PreferenceScreen working
 
 ### 2025-11-17: Test Data Migration to Bozeman ✅
 - Updated seed data from San Francisco to Bozeman, MT coordinates
@@ -151,7 +157,8 @@
 **Filtering Logic**:
 - User selects preferences (e.g., "vegetarian + gluten_free")
 - Backend filters vendors that have items matching ALL preferences (AND)
-- Dual-user mode: vendor must have items for user1 OR user2
+- Dual-user mode: when BOTH users have filters, vendor must have items for BOTH users (AND logic)
+- Single-user or no filters: vendor must have items for the active user(s) (OR logic)
 - Context-aware ratings: calculated only from matching items
 
 **Performance**:
@@ -167,4 +174,4 @@
 
 ---
 
-**Last Updated**: 2025-11-17
+**Last Updated**: 2025-11-19
