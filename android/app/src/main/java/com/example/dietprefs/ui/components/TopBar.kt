@@ -71,7 +71,7 @@ fun TopBar(
             }
         }
 
-        // Preferences display 1
+        // Preferences display
         Column(
             modifier = Modifier
                 .align(Alignment.CenterStart)
