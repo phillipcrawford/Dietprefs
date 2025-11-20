@@ -182,6 +182,11 @@ class VendorService:
                 if (is_user2_active or user2_has_price) and VendorService.item_matches_preferences(item, user2_prefs, request.user2_max_price):
                     user2_matching_items.append(item)
 
+            # When both users have filters, vendor must have items for BOTH users
+            if (is_user1_active or user1_has_price) and (is_user2_active or user2_has_price):
+                if len(user1_matching_items) == 0 or len(user2_matching_items) == 0:
+                    continue
+
             # Determine relevant items for rating calculation
             if (is_user1_active or user1_has_price) and (is_user2_active or user2_has_price):
                 # Combine both users' matching items (distinct by ID)
