@@ -52,7 +52,7 @@ def seed_database():
                 distance_factor = random.uniform(0.084, 0.126)
 
             # Random angle for spreading vendors around the center
-            angle = random.uniform(0, 2 * 3.14159)
+            angle = random.uniform(0, 2 * 3.141593)
             lat_offset = distance_factor * random.choice([-1, 1]) * abs(math.cos(angle))
             lng_offset = distance_factor * random.choice([-1, 1]) * abs(math.sin(angle))
 
