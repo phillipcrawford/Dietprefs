@@ -4,12 +4,10 @@ package com.example.dietprefs.model
  * One source of truth for every preference:
  *  - display: what the user sees on the UI
  *  - apiName: the name used in the backend API (snake_case format)
- *  - hasApiSupport: whether this preference is supported by the backend API
  */
 enum class Preference(
     val display: String,
-    val apiName: String,
-    val hasApiSupport: Boolean = true
+    val apiName: String
 ) {
     VEGETARIAN("vegetarian", "vegetarian"),
     PESCETARIAN("pescetarian", "pescetarian"),
@@ -42,10 +40,7 @@ enum class Preference(
     NO_PEANUTS("no peanuts", "no_peanuts"),
     NO_TREENUTS("no treenuts", "no_treenuts"),
     GLUTEN_FREE("gluten-free", "gluten_free"),
-    NO_SOY("no soy", "no_soy"),
-
-    // Doesn't have backend API support
-    LOW_PRICE("low price", "low_price", hasApiSupport = false);
+    NO_SOY("no soy", "no_soy");
 
     companion object {
         /** Order them *exactly* as you want to show in PreferenceScreen. */
@@ -56,8 +51,7 @@ enum class Preference(
             LOW_SUGAR, HIGH_PROTEIN, LOW_CARB, NO_ALLIUMS,
             NO_PORK_PRODUCTS, NO_RED_MEAT, NO_MSG, NO_SESAME,
             NO_MILK, NO_EGGS, NO_FISH, NO_SHELLFISH,
-            NO_PEANUTS, NO_TREENUTS, GLUTEN_FREE, NO_SOY,
-            LOW_PRICE // last row with the user toggle
+            NO_PEANUTS, NO_TREENUTS, GLUTEN_FREE, NO_SOY
         )
 
         /** Helper to map display string (e.g. "low sugar") to its enum. */

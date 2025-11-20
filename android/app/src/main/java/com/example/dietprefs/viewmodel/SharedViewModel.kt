@@ -17,18 +17,37 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * SharedViewModel manages the application state and business logic.
+ *
+ * ## Filter Architecture
+ * We support two types of filters that work together:
+ *
+ * 1. **Categorical Filters (Preferences)**:
+ *    - Boolean yes/no selections (e.g., "vegetarian", "gluten-free")
+ *    - Stored as Set<Preference> for each user
+ *    - Toggled on/off via toggleUser1Pref() / toggleUser2Pref()
+ *
+ * 2. **Numeric Filters (Price)**:
+ *    - Maximum price threshold (nullable Float)
+ *    - Stored separately as Float? for each user
+ *    - Set via setUser1MaxPrice() / setUser2MaxPrice()
+ *
+ * Both filter types are combined when calling the API via searchVendors().
+ * The separation reflects their different data types and interaction patterns.
+ */
 class SharedViewModel(
     private val repository: VendorRepository = VendorRepository()
 ) : ViewModel() {
 
-    // User preference state
+    // Categorical filters: Boolean preferences (vegetarian, gluten-free, etc.)
     private val _user1Prefs = MutableStateFlow<Set<Preference>>(emptySet())
     val user1Prefs: StateFlow<Set<Preference>> = _user1Prefs.asStateFlow()
 
     private val _user2Prefs = MutableStateFlow<Set<Preference>>(emptySet())
     val user2Prefs: StateFlow<Set<Preference>> = _user2Prefs.asStateFlow()
 
-    // Price filter state
+    // Numeric filter: Maximum price threshold
     private val _user1MaxPrice = MutableStateFlow<Float?>(null)
     val user1MaxPrice: StateFlow<Float?> = _user1MaxPrice.asStateFlow()
 
@@ -133,9 +152,15 @@ class SharedViewModel(
         _user2MaxPrice.value = price
     }
 
-    fun clearPrefs() {
+    /**
+     * Clears all filters for both users.
+     * This includes both categorical filters (preferences) and numeric filters (price).
+     */
+    fun clearAllFilters() {
+        // Clear categorical filters
         _user1Prefs.value = emptySet()
         _user2Prefs.value = emptySet()
+        // Clear numeric filters
         _user1MaxPrice.value = null
         _user2MaxPrice.value = null
     }
@@ -216,13 +241,8 @@ class SharedViewModel(
 
             try {
                 // Convert preferences to API format
-                val user1ApiPrefs = _user1Prefs.value
-                    .filter { it.hasApiSupport } // Exclude preferences without API support (e.g., LOW_PRICE)
-                    .map { it.apiName }
-
-                val user2ApiPrefs = _user2Prefs.value
-                    .filter { it.hasApiSupport }
-                    .map { it.apiName }
+                val user1ApiPrefs = _user1Prefs.value.map { it.apiName }
+                val user2ApiPrefs = _user2Prefs.value.map { it.apiName }
 
                 // Convert sort state to API format
                 val sortBy = when (_sortState.value.column) {
@@ -295,13 +315,8 @@ class SharedViewModel(
             try {
                 currentPage++
 
-                val user1ApiPrefs = _user1Prefs.value
-                    .filter { it.hasApiSupport }
-                    .map { it.apiName }
-
-                val user2ApiPrefs = _user2Prefs.value
-                    .filter { it.hasApiSupport }
-                    .map { it.apiName }
+                val user1ApiPrefs = _user1Prefs.value.map { it.apiName }
+                val user2ApiPrefs = _user2Prefs.value.map { it.apiName }
 
                 val sortBy = when (_sortState.value.column) {
                     SortColumn.VENDOR_RATING -> "rating"
@@ -388,13 +403,8 @@ class SharedViewModel(
             _errorMessage.value = null
 
             try {
-                val user1ApiPrefs = _user1Prefs.value
-                    .filter { it.hasApiSupport }
-                    .map { it.apiName }
-
-                val user2ApiPrefs = _user2Prefs.value
-                    .filter { it.hasApiSupport }
-                    .map { it.apiName }
+                val user1ApiPrefs = _user1Prefs.value.map { it.apiName }
+                val user2ApiPrefs = _user2Prefs.value.map { it.apiName }
 
                 val result = repository.getVendorItems(
                     vendorId = vendorId,

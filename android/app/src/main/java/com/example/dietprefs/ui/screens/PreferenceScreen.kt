@@ -34,6 +34,26 @@ import com.example.dietprefs.viewmodel.SharedViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * Builds a unified display string combining categorical and numeric filters.
+ * Shows preferences followed by price filter if set.
+ */
+private fun buildFilterDisplayText(preferences: List<String>, maxPrice: Float?): String {
+    val parts = mutableListOf<String>()
+
+    // Add preferences
+    if (preferences.isNotEmpty()) {
+        parts.add(preferences.joinToString(", "))
+    }
+
+    // Add price filter
+    if (maxPrice != null) {
+        parts.add("Max: $${"%.0f".format(maxPrice)}")
+    }
+
+    return parts.joinToString(" | ")
+}
+
 @Composable
 fun PreferenceScreen(
     onSearchClick: () -> Unit,
@@ -84,6 +104,8 @@ fun PreferenceScreen(
             PreferencesTopBar(
                 user1Selected = user1Selected,
                 user2Selected = user2Selected,
+                user1MaxPrice = user1MaxPrice,
+                user2MaxPrice = user2MaxPrice,
                 onSettingsClick = onSettingsClick,
                 onUserModeClick = onUserModeClick
             )
@@ -115,7 +137,7 @@ fun PreferenceScreen(
                 }
                 Button(
                     onClick = {
-                        sharedViewModel.clearPrefs()
+                        sharedViewModel.clearAllFilters()
                         isUser2Active.value = false
                     },
                     modifier = Modifier.padding(8.dp),
@@ -188,7 +210,8 @@ fun PreferenceScreen(
                     }
                 }
 
-                // Last row with "low price" and user toggle
+                // Last row: Price filter (numeric) and user toggle
+                // Price uses a dialog for selection, different from boolean prefs above
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -350,9 +373,15 @@ fun PreferenceScreen(
 fun PreferencesTopBar(
     user1Selected: List<String>,
     user2Selected: List<String>,
+    user1MaxPrice: Float?,
+    user2MaxPrice: Float?,
     onSettingsClick: () -> Unit,
     onUserModeClick: () -> Unit
 ) {
+    // Build display text combining preferences and price filter
+    val user1DisplayText = buildFilterDisplayText(user1Selected, user1MaxPrice)
+    val user2DisplayText = buildFilterDisplayText(user2Selected, user2MaxPrice)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -360,7 +389,7 @@ fun PreferencesTopBar(
             .background(dietprefsGrey)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        if (user1Selected.isEmpty() && user2Selected.isEmpty()) {
+        if (user1DisplayText.isEmpty() && user2DisplayText.isEmpty()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.align(Alignment.CenterStart)
@@ -392,7 +421,7 @@ fun PreferencesTopBar(
                     .padding(start = 16.dp), // Match SearchResultsScreen positioning
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                if (user1Selected.isNotEmpty()) {
+                if (user1DisplayText.isNotEmpty()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier.padding(8.dp),
@@ -406,17 +435,17 @@ fun PreferencesTopBar(
                         }
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = user1Selected.joinToString(", "),
+                            text = user1DisplayText,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = user1Red,
-                            maxLines = if (user2Selected.isEmpty()) 4 else 2,
+                            maxLines = if (user2DisplayText.isEmpty()) 4 else 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
 
-                if (user2Selected.isNotEmpty()) {
+                if (user2DisplayText.isNotEmpty()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier.padding(8.dp),
@@ -430,11 +459,11 @@ fun PreferencesTopBar(
                         }
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = user2Selected.joinToString(", "),
+                            text = user2DisplayText,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = user2Magenta,
-                            maxLines = if (user1Selected.isEmpty()) 4 else 2,
+                            maxLines = if (user1DisplayText.isEmpty()) 4 else 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }

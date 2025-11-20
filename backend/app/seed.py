@@ -37,18 +37,19 @@ def seed_database():
         bozeman_zips = [59715, 59718, 59771, 59772]
 
         for i in range(1, 21):  # 20 vendors
-            # Vendors 1-10: Within 5 miles (should appear in results)
-            # Vendors 11-15: 5-10 miles (should appear in results)
-            # Vendors 16-20: Beyond 10 miles (should be filtered out)
-            if i <= 10:
-                # Within 5 miles: 0-5 mile radius
-                distance_factor = random.uniform(0, 0.07)
-            elif i <= 15:
-                # 5-10 miles: 5-10 mile radius
-                distance_factor = random.uniform(0.07, 0.14)
+            # Distribute all 20 vendors within 10-mile radius
+            # Vendors 1-7: Within 3 miles
+            # Vendors 8-14: 3-6 miles
+            # Vendors 15-20: 6-9 miles
+            if i <= 7:
+                # Within 3 miles: 0-3 mile radius
+                distance_factor = random.uniform(0, 0.042)
+            elif i <= 14:
+                # 3-6 miles: 3-6 mile radius
+                distance_factor = random.uniform(0.042, 0.084)
             else:
-                # Beyond 10 miles: 10-15 mile radius (for testing filter)
-                distance_factor = random.uniform(0.14, 0.21)
+                # 6-9 miles: 6-9 mile radius (still within 10-mile filter)
+                distance_factor = random.uniform(0.084, 0.126)
 
             # Random angle for spreading vendors around the center
             angle = random.uniform(0, 2 * 3.14159)
