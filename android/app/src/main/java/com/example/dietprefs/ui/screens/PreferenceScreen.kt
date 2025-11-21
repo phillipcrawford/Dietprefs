@@ -48,10 +48,10 @@ private fun buildFilterDisplayText(preferences: List<String>, maxPrice: Float?):
 
     // Add price filter
     if (maxPrice != null) {
-        parts.add("Max: $${"%.0f".format(maxPrice)}")
+        parts.add("under $${"%.0f".format(maxPrice)}")
     }
 
-    return parts.joinToString(" | ")
+    return parts.joinToString(", ")
 }
 
 @Composable
