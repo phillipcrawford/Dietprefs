@@ -237,11 +237,7 @@ fun PreferenceScreen(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = if (currentMaxPrice != null) {
-                                "low price $${"%.2f".format(currentMaxPrice)}"
-                            } else {
-                                "low price"
-                            },
+                            text = "low price",
                             color = Color.White,
                             fontSize = 16.sp
                         )
