@@ -200,14 +200,13 @@ class VendorService:
         """
         items = db.query(Item).filter(Item.vendor_id == vendor_id).all()
 
-        print(f"DEBUG: get_vendor_items called for vendor_id={vendor_id}")
-        print(f"DEBUG: Total items found: {len(items)}")
-        print(f"DEBUG: user1_preferences: {user1_preferences}")
-        print(f"DEBUG: user2_preferences: {user2_preferences}")
+        print(f"[FILTER DEBUG] vendor_id={vendor_id}, total_items={len(items)}")
+        print(f"[FILTER DEBUG] user1_preferences={user1_preferences}")
+        print(f"[FILTER DEBUG] user2_preferences={user2_preferences}")
 
         # If no preferences, return all items
         if not user1_preferences and not user2_preferences:
-            print(f"DEBUG: No preferences, returning all {len(items)} items")
+            print(f"[FILTER DEBUG] No preferences - returning all {len(items)} items")
             return items
 
         # Filter items based on preferences
@@ -220,14 +219,14 @@ class VendorService:
                 item, user2_preferences or []
             )
 
-            print(f"DEBUG: Item '{item.name}' - matches_user1={matches_user1}, matches_user2={matches_user2}")
-
             # Include item if it matches either user's preferences
             if matches_user1 or matches_user2:
                 # Attach metadata for client
                 item.matches_user1 = matches_user1
                 item.matches_user2 = matches_user2
                 filtered_items.append(item)
+            else:
+                print(f"[FILTER DEBUG] FILTERED OUT: '{item.name}' (u1={matches_user1}, u2={matches_user2})")
 
-        print(f"DEBUG: Returning {len(filtered_items)} filtered items")
+        print(f"[FILTER DEBUG] Returning {len(filtered_items)}/{len(items)} items")
         return filtered_items
