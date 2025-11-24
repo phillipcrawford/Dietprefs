@@ -200,19 +200,27 @@ class VendorService:
         """
         items = db.query(Item).filter(Item.vendor_id == vendor_id).all()
 
+        print(f"DEBUG: get_vendor_items called for vendor_id={vendor_id}")
+        print(f"DEBUG: Total items found: {len(items)}")
+        print(f"DEBUG: user1_preferences: {user1_preferences}")
+        print(f"DEBUG: user2_preferences: {user2_preferences}")
+
         # If no preferences, return all items
         if not user1_preferences and not user2_preferences:
+            print(f"DEBUG: No preferences, returning all {len(items)} items")
             return items
 
         # Filter items based on preferences
         filtered_items = []
         for item in items:
-            matches_user1 = VendorService.item_matches_preferences(
+            matches_user1 = FilterService.item_matches_preferences(
                 item, user1_preferences or []
             )
-            matches_user2 = VendorService.item_matches_preferences(
+            matches_user2 = FilterService.item_matches_preferences(
                 item, user2_preferences or []
             )
+
+            print(f"DEBUG: Item '{item.name}' - matches_user1={matches_user1}, matches_user2={matches_user2}")
 
             # Include item if it matches either user's preferences
             if matches_user1 or matches_user2:
@@ -221,4 +229,5 @@ class VendorService:
                 item.matches_user2 = matches_user2
                 filtered_items.append(item)
 
+        print(f"DEBUG: Returning {len(filtered_items)} filtered items")
         return filtered_items
