@@ -1,119 +1,15 @@
 from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 from app.models.vendor import Vendor
-from app.models.item import Item
 from app.schemas.vendor import VendorSearchRequest, VendorResponse, VendorRating, ItemCounts, DeliveryOptions
 from app.config import settings
-import math
+from app.services.distance_service import DistanceService
+from app.services.filter_service import FilterService
 
 
 class VendorService:
     """Business logic for vendor search and filtering."""
-
-    # Map preference names to Item model fields
-    PREFERENCE_FIELD_MAP = {
-        "vegetarian": "vegetarian",
-        "pescetarian": "pescetarian",
-        "vegan": "vegan",
-        "keto": "keto",
-        "organic": "organic",
-        "gmo_free": "gmo_free",
-        "locally_sourced": "locally_sourced",
-        "raw": "raw",
-        "kosher": "kosher",
-        "halal": "halal",
-        "beef": "beef",
-        "chicken": "chicken",
-        "pork": "pork",
-        "seafood": "seafood",
-        "no_pork_products": "no_pork_products",
-        "no_red_meat": "no_red_meat",
-        "no_milk": "no_milk",
-        "no_eggs": "no_eggs",
-        "no_fish": "no_fish",
-        "no_shellfish": "no_shellfish",
-        "no_peanuts": "no_peanuts",
-        "no_treenuts": "no_treenuts",
-        "gluten_free": "gluten_free",
-        "no_soy": "no_soy",
-        "no_sesame": "no_sesame",
-        "no_msg": "no_msg",
-        "no_alliums": "no_alliums",
-        "low_sugar": "low_sugar",
-        "high_protein": "high_protein",
-        "low_carb": "low_carb",
-        "entree": "entree",
-        "sweet": "sweet",
-    }
-
-    @staticmethod
-    def calculate_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-        """
-        Calculate distance between two coordinates using Haversine formula.
-        Returns distance in miles.
-        """
-        # Radius of Earth in miles
-        R = 3959.0
-
-        # Convert to radians
-        lat1_rad = math.radians(lat1)
-        lat2_rad = math.radians(lat2)
-        delta_lat = math.radians(lat2 - lat1)
-        delta_lng = math.radians(lng2 - lng1)
-
-        # Haversine formula
-        a = (
-            math.sin(delta_lat / 2) ** 2
-            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lng / 2) ** 2
-        )
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-        distance = R * c
-
-        return round(distance, 2)
-
-    @staticmethod
-    def item_matches_preferences(item: Item, preferences: List[str], max_price: Optional[float] = None) -> bool:
-        """
-        Check if an item matches ALL given preferences (AND logic) and price constraint.
-        Returns True if all preferences match or if preferences list is empty.
-        """
-        # Check price constraint first
-        if max_price is not None and item.price is not None:
-            if item.price > max_price:
-                return False
-
-        if not preferences:
-            return True
-
-        for pref in preferences:
-            field_name = VendorService.PREFERENCE_FIELD_MAP.get(pref.lower())
-            if field_name is None:
-                # Unknown preference, skip it
-                continue
-
-            if not getattr(item, field_name, False):
-                # If ANY preference doesn't match, return False
-                return False
-
-        return True
-
-    @staticmethod
-    def _build_preference_filter(preferences: List[str], max_price: Optional[float] = None):
-        """Build SQL filter for items matching ALL preferences (AND logic) and price constraint."""
-        filters = []
-
-        # Add price filter if provided
-        if max_price is not None:
-            filters.append(Item.price <= max_price)
-
-        # Add preference filters
-        for pref in preferences:
-            field_name = VendorService.PREFERENCE_FIELD_MAP.get(pref.lower())
-            if field_name:
-                filters.append(getattr(Item, field_name) == True)
-
-        return and_(*filters) if filters else None
 
     @staticmethod
     def search_vendors(
@@ -136,9 +32,7 @@ class VendorService:
 
         # Apply distance bounding box filter BEFORE loading vendors (if location provided)
         if request.lat is not None and request.lng is not None:
-            max_distance = settings.MAX_DISTANCE_MILES
-            lat_delta = max_distance / 69.0
-            lng_delta = max_distance / (69.0 * math.cos(math.radians(request.lat)))
+            lat_delta, lng_delta = DistanceService.get_bounding_box_deltas(request.lat)
 
             query = query.filter(
                 Vendor.lat.between(request.lat - lat_delta, request.lat + lat_delta),
@@ -152,8 +46,8 @@ class VendorService:
         # If preferences or price filters are active, filter to vendors that have at least one matching item
         if is_user1_active or is_user2_active or user1_has_price or user2_has_price:
             # Build filters for each user (including price)
-            user1_filter = VendorService._build_preference_filter(user1_prefs, request.user1_max_price)
-            user2_filter = VendorService._build_preference_filter(user2_prefs, request.user2_max_price)
+            user1_filter = FilterService.build_preference_filter(user1_prefs, request.user1_max_price)
+            user2_filter = FilterService.build_preference_filter(user2_prefs, request.user2_max_price)
 
             # Combine with OR: vendor must have items matching user1 OR user2
             if user1_filter is not None and user2_filter is not None:
@@ -178,9 +72,9 @@ class VendorService:
             user2_matching_items = []
 
             for item in vendor.items:
-                if (is_user1_active or user1_has_price) and VendorService.item_matches_preferences(item, user1_prefs, request.user1_max_price):
+                if (is_user1_active or user1_has_price) and FilterService.item_matches_preferences(item, user1_prefs, request.user1_max_price):
                     user1_matching_items.append(item)
-                if (is_user2_active or user2_has_price) and VendorService.item_matches_preferences(item, user2_prefs, request.user2_max_price):
+                if (is_user2_active or user2_has_price) and FilterService.item_matches_preferences(item, user2_prefs, request.user2_max_price):
                     user2_matching_items.append(item)
 
             # When both users have filters, vendor must have items for BOTH users
@@ -218,12 +112,14 @@ class VendorService:
             # (bounding box filter already applied in SQL)
             distance_miles = None
             if request.lat is not None and request.lng is not None:
-                distance_miles = VendorService.calculate_distance(
+                distance_miles = DistanceService.calculate_distance(
                     request.lat, request.lng, vendor.lat, vendor.lng
                 )
 
                 # Apply exact distance filter (after rough bounding box)
-                if distance_miles > settings.MAX_DISTANCE_MILES:
+                if not DistanceService.is_within_distance(
+                    request.lat, request.lng, vendor.lat, vendor.lng
+                ):
                     continue
 
             # Build response object

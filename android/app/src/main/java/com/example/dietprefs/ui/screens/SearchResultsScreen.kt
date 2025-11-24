@@ -6,26 +6,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,10 +30,13 @@ import com.example.dietprefs.model.SortDirection
 import com.example.dietprefs.ui.navigation.Screen
 import com.example.dietprefs.ui.theme.backgroundGrey
 import com.example.dietprefs.ui.theme.dietprefsGrey
-import com.example.dietprefs.ui.theme.upvoteGreen
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
+import com.example.dietprefs.ui.components.FilterButton
 import com.example.dietprefs.ui.components.TopBar
+import com.example.dietprefs.ui.components.VendorListItem
+import com.example.dietprefs.ui.components.VendorSearchBar
+import com.example.dietprefs.ui.components.table.SortableHeader
 import com.example.dietprefs.viewmodel.SharedViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -341,105 +332,14 @@ fun SearchResultsScreen(
                         },
                         key = { _, vendor -> vendor.vendorName + vendor.querySpecificRatingString } // More unique key
                     ) { index, vendor ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .clickable {
-                                    sharedViewModel.selectVendorByName(vendor.vendorName)
-                                    navController.navigate(Screen.RestaurantDetail.route)
-                                },
-                            verticalAlignment = Alignment.Top // Align to top for multi-line text
-                        ) {
-                            // Vendor Name and Rating
-                            Box(
-                                modifier = Modifier
-                                    .weight(2f) // This Box takes up 2/4 of the available width
-                                    .fillMaxHeight()
-                                    .drawBehind {
-                                        // Calculate the split point based on rating ratio
-                                        val ratingRatio = vendor.querySpecificRatingValue.coerceIn(0f, 1f)
-                                        val greenWidth = size.width * ratingRatio
-                                        
-                                        // Draw green section (upvotes)
-                                        drawRect(
-                                            color = upvoteGreen,
-                                            topLeft = Offset.Zero,
-                                            size = Size(greenWidth, size.height)
-                                        )
-                                        
-                                        // Draw grey section (remaining votes)
-                                        drawRect(
-                                            color = dietprefsGrey,
-                                            topLeft = Offset(greenWidth, 0f),
-                                            size = Size(size.width - greenWidth, size.height)
-                                        )
-                                    }
-                                // .height(IntrinsicSize.Min) // Optional: If you need to ensure Box wraps content height
-                            ) {
-                                // Vendor Name - Aligned to TopStart (default for Box content, but explicit is fine)
-                                Text(
-                                    text = vendor.vendorName,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = Color.White,
-                                    modifier = Modifier
-                                        .align(Alignment.TopStart)
-                                        .padding(start = 16.dp, top = 10.dp, bottom = 10.dp)
-                                )
-
-                                // Rating String - Aligned to TopEnd (Top Right)
-                                Text(
-                                    text = vendor.querySpecificRatingString,
-                                    fontSize = 13.sp,
-                                    color = Color.White,
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(end = 16.dp, top = 10.dp, bottom = 10.dp)
-                                )
+                        VendorListItem(
+                            vendor = vendor,
+                            isTwoUserMode = isTwoUserMode,
+                            onClick = {
+                                sharedViewModel.selectVendorByName(vendor.vendorName)
+                                navController.navigate(Screen.RestaurantDetail.route)
                             }
-
-                            // Distance
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .background(dietprefsGrey),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    String.format("%.1f mi", vendor.distanceMiles),
-                                    fontSize = 14.sp,
-                                    color = Color.White
-                                )
-                            }
-
-                            // Menu Item Counts (adapts to user mode)
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .background(dietprefsGrey),
-                                horizontalAlignment = Alignment.CenterHorizontally, // Center the text content
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                if (isTwoUserMode) {
-                                    Text(
-                                        text = "${vendor.user1Count} | ${vendor.user2Count}",
-                                        fontSize = 14.sp,
-                                        color = Color.White,
-                                        textAlign = TextAlign.Center
-                                    )
-                                } else { // Single user mode or no users with preferences
-                                    Text(
-                                        text = "${vendor.combinedRelevantItemCount}",
-                                        fontSize = 14.sp,
-                                        color = Color.White,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
+                        )
                         HorizontalDivider(
                             thickness = 2.dp,
                             color = backgroundGrey
@@ -456,24 +356,10 @@ fun SearchResultsScreen(
                 }
             }
 
-            // --- Search Bar (from your existing code) ---
-            TextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Search vendors...") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = TextFieldDefaults.colors( // Assuming M3 TextFieldColors
-                    focusedContainerColor = Color(0xFFF0F0F0),
-                    unfocusedContainerColor = Color(0xFFF0F0F0),
-                    disabledContainerColor = Color(0xFFF0F0F0),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                ),
-                singleLine = true
+            // --- Search Bar ---
+            VendorSearchBar(
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it }
             )
 
             // --- Filter Buttons (from your existing code, simplified) ---
@@ -494,51 +380,5 @@ fun SearchResultsScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun SortableHeader(
-    text: String,
-    column: SortColumn,
-    currentSortState: com.example.dietprefs.model.SortState,
-    modifier: Modifier = Modifier,
-    textAlign: TextAlign? = null
-) {
-    Row(
-        modifier = modifier.padding(vertical = 4.dp), // Added some horizontal padding
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = if (textAlign == TextAlign.Center) Arrangement.Center else Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = text,
-            fontWeight = FontWeight.Bold, // Header text is bold
-            fontSize = 16.sp,             // Adjusted font size
-            color = Color.White,
-            textAlign = textAlign ?: TextAlign.Start // Allow specifying text alignment
-        )
-        Spacer(Modifier.width(4.dp)) // Space between text and icon
-        if (currentSortState.column == column) {
-            Icon(
-                imageVector = if (currentSortState.direction == SortDirection.ASCENDING) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                contentDescription = "Sort Direction: ${currentSortState.direction}",
-                tint = Color.White,
-                modifier = Modifier.size(16.dp)
-            )
-        } else {
-            // Optional: Add a transparent spacer to keep alignment consistent when icon is not visible
-            Spacer(Modifier.size(16.dp))
-        }
-    }
-}
-
-@Composable
-fun FilterButton(label: String, onClick: () -> Unit) { // Added onClick
-    Button(
-        onClick = onClick,
-        modifier = Modifier.padding(horizontal = 2.dp), // Reduced padding
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp) // Smaller button
-    ) {
-        Text(label, fontSize = 12.sp) // Smaller text
     }
 }

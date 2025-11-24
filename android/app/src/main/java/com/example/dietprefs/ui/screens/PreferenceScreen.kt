@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dietprefs.Constants
 import com.example.dietprefs.model.Preference
+import com.example.dietprefs.ui.components.PreferenceGrid
+import com.example.dietprefs.ui.components.PriceSelectionDialog
 import com.example.dietprefs.ui.theme.backgroundGrey
 import com.example.dietprefs.ui.theme.dietprefsGrey
 import com.example.dietprefs.ui.theme.dietprefsTeal
@@ -159,59 +161,24 @@ fun PreferenceScreen(
                 .padding(0.dp, 4.dp)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                val rows = Preference.orderedForUI.take(32).chunked(2).take(16)
-
-                rows.forEachIndexed { rowIndex, rowPrefs ->
-                    val isTeal = rowIndex >= 8
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        rowPrefs.forEach { pref ->
-                            val isSelected = if (isUser2Active.value)
-                                user2Prefs.contains(pref)
-                            else
-                                user1Prefs.contains(pref)
-
-                            val bgColor = when {
-                                isTeal && isSelected -> selectedTeal
-                                isTeal && !isSelected -> dietprefsTeal
-                                isSelected -> selectedGrey
-                                else -> dietprefsGrey
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .background(bgColor, shape = RoundedCornerShape(4.dp))
-                                    .clickable {
-                                        if (isUser2Active.value) {
-                                            sharedViewModel.toggleUser2Pref(pref)
-                                        } else {
-                                            sharedViewModel.toggleUser1Pref(pref)
-                                        }
-                                    }
-                                    .padding(start = 12.dp),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Text(
-                                    text = pref.display,
-                                    color = Color.White,
-                                    fontSize = 16.sp
-                                )
-                            }
+                PreferenceGrid(
+                    user1Prefs = user1Prefs,
+                    user2Prefs = user2Prefs,
+                    isUser2Active = isUser2Active.value,
+                    onTogglePref = { pref ->
+                        if (isUser2Active.value) {
+                            sharedViewModel.toggleUser2Pref(pref)
+                        } else {
+                            sharedViewModel.toggleUser1Pref(pref)
                         }
-                        if (rowPrefs.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
-                    }
-                }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(16f)
+                )
 
                 // Last row: Price filter (numeric) and user toggle
                 // Price uses a dialog for selection, different from boolean prefs above
@@ -219,7 +186,7 @@ fun PreferenceScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     val currentMaxPrice = if (isUser2Active.value) user2MaxPrice else user1MaxPrice
                     val isLowPriceSelected = currentMaxPrice != null
@@ -285,87 +252,28 @@ fun PreferenceScreen(
     }
 
     // Price Selection Dialog
-    if (showPriceDialog) {
-        AlertDialog(
-            onDismissRequest = { showPriceDialog = false },
-            title = {
-                Text(
-                    text = "Set Maximum Price",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Select maximum price:",
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    // Scrollable list of price options
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 300.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        priceOptions.forEach { price ->
-                            val currentMaxPrice = if (isUser2Active.value) user2MaxPrice else user1MaxPrice
-                            val isSelected = currentMaxPrice == price
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(
-                                        if (isSelected) selectedGrey else Color.Transparent,
-                                        shape = RoundedCornerShape(4.dp)
-                                    )
-                                    .clickable {
-                                        if (isUser2Active.value) {
-                                            sharedViewModel.setUser2MaxPrice(price)
-                                        } else {
-                                            sharedViewModel.setUser1MaxPrice(price)
-                                        }
-                                        showPriceDialog = false
-                                    }
-                                    .padding(12.dp)
-                            ) {
-                                Text(
-                                    text = "$${"%.0f".format(price)}",
-                                    fontSize = 16.sp,
-                                    color = Color.White
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // Clear price filter
-                        if (isUser2Active.value) {
-                            sharedViewModel.setUser2MaxPrice(null)
-                        } else {
-                            sharedViewModel.setUser1MaxPrice(null)
-                        }
-                        showPriceDialog = false
-                    }
-                ) {
-                    Text("Clear")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPriceDialog = false }) {
-                    Text("Cancel")
-                }
-            },
-            containerColor = dietprefsGrey,
-            textContentColor = Color.White
-        )
-    }
+    PriceSelectionDialog(
+        showDialog = showPriceDialog,
+        onDismiss = { showPriceDialog = false },
+        isUser2Active = isUser2Active.value,
+        user1MaxPrice = user1MaxPrice,
+        user2MaxPrice = user2MaxPrice,
+        onSetPrice = { price ->
+            if (isUser2Active.value) {
+                sharedViewModel.setUser2MaxPrice(price)
+            } else {
+                sharedViewModel.setUser1MaxPrice(price)
+            }
+        },
+        onClearPrice = {
+            if (isUser2Active.value) {
+                sharedViewModel.setUser2MaxPrice(null)
+            } else {
+                sharedViewModel.setUser1MaxPrice(null)
+            }
+        },
+        priceOptions = priceOptions
+    )
 }
 
 @Composable
