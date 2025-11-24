@@ -4,6 +4,7 @@ from sqlalchemy import and_, or_
 from app.models.vendor import Vendor
 from app.models.item import Item
 from app.schemas.vendor import VendorSearchRequest, VendorResponse, VendorRating, ItemCounts, DeliveryOptions
+from app.config import settings
 import math
 
 
@@ -135,7 +136,7 @@ class VendorService:
 
         # Apply distance bounding box filter BEFORE loading vendors (if location provided)
         if request.lat is not None and request.lng is not None:
-            max_distance = 10.0  # TODO: Make configurable
+            max_distance = settings.MAX_DISTANCE_MILES
             lat_delta = max_distance / 69.0
             lng_delta = max_distance / (69.0 * math.cos(math.radians(request.lat)))
 
@@ -222,8 +223,7 @@ class VendorService:
                 )
 
                 # Apply exact distance filter (after rough bounding box)
-                max_distance = 10.0  # TODO: Make configurable
-                if distance_miles > max_distance:
+                if distance_miles > settings.MAX_DISTANCE_MILES:
                     continue
 
             # Build response object

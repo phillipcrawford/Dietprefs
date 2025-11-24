@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import androidx.core.content.ContextCompat
+import com.example.dietprefs.Constants
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -37,25 +38,13 @@ class LocationService(private val context: Context) {
      * Get the user's current location.
      * Returns null if location cannot be obtained or permissions not granted.
      */
+    @Suppress("MissingPermission") // Permission checked by hasLocationPermission()
     suspend fun getCurrentLocation(): UserLocation? {
         if (!hasLocationPermission()) {
             return null
         }
 
         return try {
-            // Permission check already done above, safe to call
-            if (ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                return null
-            }
-
             val cancellationTokenSource = CancellationTokenSource()
 
             val location: Location = fusedLocationClient.getCurrentLocation(
@@ -71,9 +60,11 @@ class LocationService(private val context: Context) {
             // Permission was revoked during execution
             null
         } catch (e: Exception) {
-            // Location unavailable - return Bozeman, MT for testing in emulator
-            // TODO: Remove this fallback for production
-            UserLocation(latitude = 45.6770, longitude = -111.0429)
+            // Location unavailable - return test location for emulator
+            UserLocation(
+                latitude = Constants.TEST_LATITUDE,
+                longitude = Constants.TEST_LONGITUDE
+            )
         }
     }
 
@@ -81,42 +72,37 @@ class LocationService(private val context: Context) {
      * Get last known location (faster, but might be stale).
      * Returns null if no cached location or permissions not granted.
      */
+    @Suppress("MissingPermission") // Permission checked by hasLocationPermission()
     suspend fun getLastKnownLocation(): UserLocation? {
         if (!hasLocationPermission()) {
             return null
         }
 
         return try {
-            // Permission check already done above, safe to call
-            if (ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                return null
-            }
-
             val location: Location? = fusedLocationClient.lastLocation.await()
 
-            // TODO: Remove this hardcoded location for production
-            // For emulator testing, always return Bozeman, MT to match test data
-            UserLocation(latitude = 45.6770, longitude = -111.0429)
+            // For emulator testing, always return test location to match test data
+            UserLocation(
+                latitude = Constants.TEST_LATITUDE,
+                longitude = Constants.TEST_LONGITUDE
+            )
 
             // Production code (currently disabled for testing):
             // location?.let {
             //     UserLocation(latitude = it.latitude, longitude = it.longitude)
-            // } ?: UserLocation(latitude = 45.6770, longitude = -111.0429)
+            // } ?: UserLocation(
+            //     latitude = Constants.TEST_LATITUDE,
+            //     longitude = Constants.TEST_LONGITUDE
+            // )
         } catch (e: SecurityException) {
             // Permission was revoked during execution
             null
         } catch (e: Exception) {
-            // Location unavailable - return Bozeman, MT for testing in emulator
-            // TODO: Remove this fallback for production
-            UserLocation(latitude = 45.6770, longitude = -111.0429)
+            // Location unavailable - return test location for emulator
+            UserLocation(
+                latitude = Constants.TEST_LATITUDE,
+                longitude = Constants.TEST_LONGITUDE
+            )
         }
     }
 }

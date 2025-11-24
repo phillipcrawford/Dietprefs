@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.dietprefs.Constants
 import com.example.dietprefs.model.Preference
 import com.example.dietprefs.ui.theme.backgroundGrey
 import com.example.dietprefs.ui.theme.dietprefsGrey
@@ -74,7 +75,9 @@ fun PreferenceScreen(
 
     // Price dialog state
     var showPriceDialog by remember { mutableStateOf(false) }
-    val priceOptions = remember { (5..30).map { it.toFloat() } }
+    val priceOptions = remember {
+        (Constants.MIN_PRICE.toInt()..Constants.MAX_PRICE.toInt()).map { it.toFloat() }
+    }
 
     // Location permission launcher
     val locationPermissionLauncher = rememberLauncherForActivityResult(

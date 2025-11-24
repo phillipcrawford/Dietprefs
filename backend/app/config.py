@@ -20,6 +20,9 @@ class Settings(BaseSettings):
         "dietprefs://"
     ]
 
+    # Search Configuration
+    MAX_DISTANCE_MILES: float = 10.0  # Maximum distance for vendor search results
+
     # Environment
     ENVIRONMENT: str = "development"
 

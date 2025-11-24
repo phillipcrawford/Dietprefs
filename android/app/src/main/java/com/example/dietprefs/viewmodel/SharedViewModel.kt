@@ -2,6 +2,7 @@ package com.example.dietprefs.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.dietprefs.Constants
 import com.example.dietprefs.model.Preference
 import com.example.dietprefs.model.SortColumn
 import com.example.dietprefs.model.SortDirection
@@ -72,7 +73,7 @@ class SharedViewModel(
 
     // Pagination state
     private var currentPage = 1  // API uses 1-based indexing
-    private val pageSize = 10
+    private val pageSize = Constants.PAGE_SIZE
     private var totalPages = 0
 
     // Sorting state
@@ -109,6 +110,36 @@ class SharedViewModel(
 
     fun updateVisibleRange(start: Int, end: Int) {
         _visibleRange.value = start to end
+    }
+
+    /**
+     * Helper method to convert preferences to API format.
+     * Eliminates duplication across searchVendors, loadNextPage, and fetchMenuItems.
+     */
+    private fun getApiPreferences(): Pair<List<String>, List<String>> {
+        return Pair(
+            _user1Prefs.value.map { it.apiName },
+            _user2Prefs.value.map { it.apiName }
+        )
+    }
+
+    /**
+     * Helper method to convert sort state to API format.
+     * Eliminates duplication between searchVendors and loadNextPage.
+     */
+    private fun getSortParameters(): Pair<String, String> {
+        val sortBy = when (_sortState.value.column) {
+            SortColumn.VENDOR_RATING -> "rating"
+            SortColumn.DISTANCE -> "distance"
+            SortColumn.MENU_ITEMS -> "item_count"
+        }
+
+        val sortDirection = when (_sortState.value.direction) {
+            SortDirection.ASCENDING -> "asc"
+            SortDirection.DESCENDING -> "desc"
+        }
+
+        return Pair(sortBy, sortDirection)
     }
 
     fun selectVendor(vendor: VendorResponse) {
@@ -241,20 +272,10 @@ class SharedViewModel(
 
             try {
                 // Convert preferences to API format
-                val user1ApiPrefs = _user1Prefs.value.map { it.apiName }
-                val user2ApiPrefs = _user2Prefs.value.map { it.apiName }
+                val (user1ApiPrefs, user2ApiPrefs) = getApiPreferences()
 
                 // Convert sort state to API format
-                val sortBy = when (_sortState.value.column) {
-                    SortColumn.VENDOR_RATING -> "rating"
-                    SortColumn.DISTANCE -> "distance"
-                    SortColumn.MENU_ITEMS -> "item_count"
-                }
-
-                val sortDirection = when (_sortState.value.direction) {
-                    SortDirection.ASCENDING -> "asc"
-                    SortDirection.DESCENDING -> "desc"
-                }
+                val (sortBy, sortDirection) = getSortParameters()
 
                 // Reset to first page
                 currentPage = 1
@@ -315,19 +336,8 @@ class SharedViewModel(
             try {
                 currentPage++
 
-                val user1ApiPrefs = _user1Prefs.value.map { it.apiName }
-                val user2ApiPrefs = _user2Prefs.value.map { it.apiName }
-
-                val sortBy = when (_sortState.value.column) {
-                    SortColumn.VENDOR_RATING -> "rating"
-                    SortColumn.DISTANCE -> "distance"
-                    SortColumn.MENU_ITEMS -> "item_count"
-                }
-
-                val sortDirection = when (_sortState.value.direction) {
-                    SortDirection.ASCENDING -> "asc"
-                    SortDirection.DESCENDING -> "desc"
-                }
+                val (user1ApiPrefs, user2ApiPrefs) = getApiPreferences()
+                val (sortBy, sortDirection) = getSortParameters()
 
                 val result = repository.searchVendors(
                     user1Preferences = user1ApiPrefs,
@@ -403,8 +413,7 @@ class SharedViewModel(
             _errorMessage.value = null
 
             try {
-                val user1ApiPrefs = _user1Prefs.value.map { it.apiName }
-                val user2ApiPrefs = _user2Prefs.value.map { it.apiName }
+                val (user1ApiPrefs, user2ApiPrefs) = getApiPreferences()
 
                 val result = repository.getVendorItems(
                     vendorId = vendorId,
