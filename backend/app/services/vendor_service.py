@@ -193,36 +193,42 @@ class VendorService:
         db: Session,
         vendor_id: int,
         user1_preferences: Optional[List[str]] = None,
-        user2_preferences: Optional[List[str]] = None
+        user2_preferences: Optional[List[str]] = None,
+        user1_max_price: Optional[float] = None,
+        user2_max_price: Optional[float] = None
     ) -> List[Item]:
         """
-        Get all items for a vendor, optionally filtered by preferences.
+        Get all items for a vendor, optionally filtered by preferences and price.
         """
         items = db.query(Item).filter(Item.vendor_id == vendor_id).all()
 
         print(f"[FILTER DEBUG] vendor_id={vendor_id}, total_items={len(items)}")
-        print(f"[FILTER DEBUG] user1_preferences={user1_preferences}")
-        print(f"[FILTER DEBUG] user2_preferences={user2_preferences}")
+        print(f"[FILTER DEBUG] user1: prefs={user1_preferences}, max_price={user1_max_price}")
+        print(f"[FILTER DEBUG] user2: prefs={user2_preferences}, max_price={user2_max_price}")
 
-        # If no preferences, return all items
-        if not user1_preferences and not user2_preferences:
-            print(f"[FILTER DEBUG] No preferences - returning all {len(items)} items")
+        # Check if any filters are active
+        user1_active = bool(user1_preferences or user1_max_price is not None)
+        user2_active = bool(user2_preferences or user2_max_price is not None)
+
+        # If no filters at all, return all items
+        if not user1_active and not user2_active:
+            print(f"[FILTER DEBUG] No filters - returning all {len(items)} items")
             return items
 
-        # Filter items based on preferences
+        # Filter items based on preferences and price
         filtered_items = []
         for item in items:
             matches_user1 = FilterService.item_matches_preferences(
-                item, user1_preferences or []
+                item, user1_preferences or [], user1_max_price
             )
             matches_user2 = FilterService.item_matches_preferences(
-                item, user2_preferences or []
+                item, user2_preferences or [], user2_max_price
             )
 
-            # Log each item's vegetarian status
-            print(f"[FILTER DEBUG] Item '{item.name}': vegetarian={item.vegetarian}, matches_u1={matches_user1}, matches_u2={matches_user2}")
+            # Log each item's status
+            print(f"[FILTER DEBUG] Item '{item.name}' (${item.price}): veg={item.vegetarian}, u1={matches_user1}, u2={matches_user2}")
 
-            # Include item if it matches either user's preferences
+            # Include item if it matches either user's filters
             if matches_user1 or matches_user2:
                 # Attach metadata for client
                 item.matches_user1 = matches_user1

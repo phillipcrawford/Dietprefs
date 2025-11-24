@@ -100,6 +100,8 @@ async def get_vendor_items(
     vendor_id: int,
     user1_preferences: str = "",
     user2_preferences: str = "",
+    user1_max_price: Optional[float] = None,
+    user2_max_price: Optional[float] = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -107,6 +109,8 @@ async def get_vendor_items(
 
     - **user1_preferences**: Comma-separated dietary preferences for user 1
     - **user2_preferences**: Comma-separated dietary preferences for user 2
+    - **user1_max_price**: Maximum price filter for user 1
+    - **user2_max_price**: Maximum price filter for user 2
 
     Returns items with flags indicating which user's preferences they match.
     """
@@ -122,7 +126,9 @@ async def get_vendor_items(
     user1_prefs = [p.strip() for p in user1_preferences.split(",") if p.strip()]
     user2_prefs = [p.strip() for p in user2_preferences.split(",") if p.strip()]
 
-    items = VendorService.get_vendor_items(db, vendor_id, user1_prefs, user2_prefs)
+    items = VendorService.get_vendor_items(
+        db, vendor_id, user1_prefs, user2_prefs, user1_max_price, user2_max_price
+    )
 
     # Convert to response schema
     response_items = []

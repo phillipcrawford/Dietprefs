@@ -16,7 +16,9 @@ interface DietPrefsApiService {
     suspend fun getVendorItems(
         @Path("id") vendorId: Int,
         @Query("user1_preferences") user1Prefs: String = "",
-        @Query("user2_preferences") user2Prefs: String = ""
+        @Query("user2_preferences") user2Prefs: String = "",
+        @Query("user1_max_price") user1MaxPrice: Float? = null,
+        @Query("user2_max_price") user2MaxPrice: Float? = null
     ): List<ItemResponse>
 
     @POST("/api/v1/items/{id}/vote")

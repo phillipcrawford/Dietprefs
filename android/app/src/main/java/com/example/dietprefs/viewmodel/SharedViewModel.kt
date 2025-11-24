@@ -418,7 +418,9 @@ class SharedViewModel(
                 val result = repository.getVendorItems(
                     vendorId = vendorId,
                     user1Preferences = user1ApiPrefs,
-                    user2Preferences = user2ApiPrefs
+                    user2Preferences = user2ApiPrefs,
+                    user1MaxPrice = _user1MaxPrice.value,
+                    user2MaxPrice = _user2MaxPrice.value
                 )
 
                 result.onSuccess { items ->

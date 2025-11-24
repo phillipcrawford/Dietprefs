@@ -52,15 +52,21 @@ class VendorRepository(
     suspend fun getVendorItems(
         vendorId: Int,
         user1Preferences: List<String>,
-        user2Preferences: List<String>
+        user2Preferences: List<String>,
+        user1MaxPrice: Float?,
+        user2MaxPrice: Float?
     ): Result<List<ItemResponse>> {
         return try {
             val user1Prefs = user1Preferences.joinToString(",")
             val user2Prefs = user2Preferences.joinToString(",")
 
-            Log.d("VendorRepository", "Fetching items for vendor $vendorId with user1=$user1Prefs, user2=$user2Prefs")
+            Log.d("VendorRepository", "Fetching items for vendor $vendorId")
+            Log.d("VendorRepository", "  user1: prefs=$user1Prefs, maxPrice=$user1MaxPrice")
+            Log.d("VendorRepository", "  user2: prefs=$user2Prefs, maxPrice=$user2MaxPrice")
 
-            val items = apiService.getVendorItems(vendorId, user1Prefs, user2Prefs)
+            val items = apiService.getVendorItems(
+                vendorId, user1Prefs, user2Prefs, user1MaxPrice, user2MaxPrice
+            )
             Log.d("VendorRepository", "Received ${items.size} items")
             Result.success(items)
         } catch (e: Exception) {
