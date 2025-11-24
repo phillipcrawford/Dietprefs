@@ -219,6 +219,9 @@ class VendorService:
                 item, user2_preferences or []
             )
 
+            # Log each item's vegetarian status
+            print(f"[FILTER DEBUG] Item '{item.name}': vegetarian={item.vegetarian}, matches_u1={matches_user1}, matches_u2={matches_user2}")
+
             # Include item if it matches either user's preferences
             if matches_user1 or matches_user2:
                 # Attach metadata for client
@@ -226,7 +229,7 @@ class VendorService:
                 item.matches_user2 = matches_user2
                 filtered_items.append(item)
             else:
-                print(f"[FILTER DEBUG] FILTERED OUT: '{item.name}' (u1={matches_user1}, u2={matches_user2})")
+                print(f"[FILTER DEBUG] FILTERED OUT: '{item.name}'")
 
         print(f"[FILTER DEBUG] Returning {len(filtered_items)}/{len(items)} items")
         return filtered_items
