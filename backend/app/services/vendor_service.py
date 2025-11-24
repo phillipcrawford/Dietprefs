@@ -202,17 +202,12 @@ class VendorService:
         """
         items = db.query(Item).filter(Item.vendor_id == vendor_id).all()
 
-        print(f"[FILTER DEBUG] vendor_id={vendor_id}, total_items={len(items)}")
-        print(f"[FILTER DEBUG] user1: prefs={user1_preferences}, max_price={user1_max_price}")
-        print(f"[FILTER DEBUG] user2: prefs={user2_preferences}, max_price={user2_max_price}")
-
         # Check if any filters are active for each user
         user1_active = bool(user1_preferences or user1_max_price is not None)
         user2_active = bool(user2_preferences or user2_max_price is not None)
 
         # If no filters at all, return all items
         if not user1_active and not user2_active:
-            print(f"[FILTER DEBUG] No filters - returning all {len(items)} items")
             return items
 
         # Filter items based on preferences and price
@@ -232,17 +227,11 @@ class VendorService:
                     item, user2_preferences or [], user2_max_price
                 )
 
-            # Log each item's status
-            print(f"[FILTER DEBUG] Item '{item.name}' (${item.price}): veg={item.vegetarian}, u1={matches_user1}, u2={matches_user2}")
-
             # Include item if it matches at least one ACTIVE user's filters
             if matches_user1 or matches_user2:
                 # Attach metadata for client
                 item.matches_user1 = matches_user1
                 item.matches_user2 = matches_user2
                 filtered_items.append(item)
-            else:
-                print(f"[FILTER DEBUG] FILTERED OUT: '{item.name}'")
 
-        print(f"[FILTER DEBUG] Returning {len(filtered_items)}/{len(items)} items")
         return filtered_items
