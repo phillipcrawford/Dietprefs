@@ -206,7 +206,7 @@ class VendorService:
         print(f"[FILTER DEBUG] user1: prefs={user1_preferences}, max_price={user1_max_price}")
         print(f"[FILTER DEBUG] user2: prefs={user2_preferences}, max_price={user2_max_price}")
 
-        # Check if any filters are active
+        # Check if any filters are active for each user
         user1_active = bool(user1_preferences or user1_max_price is not None)
         user2_active = bool(user2_preferences or user2_max_price is not None)
 
@@ -218,17 +218,24 @@ class VendorService:
         # Filter items based on preferences and price
         filtered_items = []
         for item in items:
-            matches_user1 = FilterService.item_matches_preferences(
-                item, user1_preferences or [], user1_max_price
-            )
-            matches_user2 = FilterService.item_matches_preferences(
-                item, user2_preferences or [], user2_max_price
-            )
+            # Only check matching for active users
+            matches_user1 = False
+            matches_user2 = False
+
+            if user1_active:
+                matches_user1 = FilterService.item_matches_preferences(
+                    item, user1_preferences or [], user1_max_price
+                )
+
+            if user2_active:
+                matches_user2 = FilterService.item_matches_preferences(
+                    item, user2_preferences or [], user2_max_price
+                )
 
             # Log each item's status
             print(f"[FILTER DEBUG] Item '{item.name}' (${item.price}): veg={item.vegetarian}, u1={matches_user1}, u2={matches_user2}")
 
-            # Include item if it matches either user's filters
+            # Include item if it matches at least one ACTIVE user's filters
             if matches_user1 or matches_user2:
                 # Attach metadata for client
                 item.matches_user1 = matches_user1
