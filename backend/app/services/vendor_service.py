@@ -2,6 +2,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import or_
 from app.models.vendor import Vendor
+from app.models.item import Item
 from app.schemas.vendor import VendorSearchRequest, VendorResponse, VendorRating, ItemCounts, DeliveryOptions
 from app.config import settings
 from app.services.distance_service import DistanceService
