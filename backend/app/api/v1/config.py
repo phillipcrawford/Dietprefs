@@ -8,7 +8,7 @@ from app.schemas.config import (
     SortingConfig,
     SortOption
 )
-from app.config import MAX_DISTANCE_MILES
+from app.config import settings
 
 router = APIRouter()
 
@@ -40,7 +40,7 @@ async def get_app_config():
             max_page_size=100
         ),
         location=LocationConfig(
-            max_distance_miles=MAX_DISTANCE_MILES,
+            max_distance_miles=settings.MAX_DISTANCE_MILES,
             default_latitude=45.6770,
             default_longitude=-111.0429,
             default_location_name="Bozeman, MT"
