@@ -3,6 +3,7 @@ package com.example.dietprefs.repository
 import android.util.Log
 import com.example.dietprefs.network.DietPrefsApiService
 import com.example.dietprefs.network.RetrofitClient
+import com.example.dietprefs.network.models.AppConfig
 import com.example.dietprefs.network.models.VendorSearchRequest
 import com.example.dietprefs.network.models.VendorSearchResponse
 import com.example.dietprefs.network.models.ItemResponse
@@ -10,6 +11,17 @@ import com.example.dietprefs.network.models.ItemResponse
 class VendorRepository(
     private val apiService: DietPrefsApiService = RetrofitClient.apiService
 ) {
+
+    suspend fun getConfig(): Result<AppConfig> {
+        return try {
+            val config = apiService.getConfig()
+            Log.d("VendorRepository", "Config fetched: version=${config.version}")
+            Result.success(config)
+        } catch (e: Exception) {
+            Log.e("VendorRepository", "Failed to fetch config", e)
+            Result.failure(e)
+        }
+    }
 
     suspend fun searchVendors(
         user1Preferences: List<String>,

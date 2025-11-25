@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
-from app.api.v1 import vendors, items, admin
+from app.api.v1 import vendors, items, admin, config
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -42,6 +42,7 @@ async def health_check():
 
 
 # Include API routers
+app.include_router(config.router, prefix=settings.API_V1_PREFIX, tags=["config"])
 app.include_router(vendors.router, prefix=settings.API_V1_PREFIX, tags=["vendors"])
 app.include_router(items.router, prefix=settings.API_V1_PREFIX, tags=["items"])
 app.include_router(admin.router, prefix=settings.API_V1_PREFIX, tags=["admin"])

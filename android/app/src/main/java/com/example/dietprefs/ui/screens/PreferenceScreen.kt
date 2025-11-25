@@ -50,12 +50,15 @@ fun PreferenceScreen(
     val user2Prefs by sharedViewModel.user2Prefs.collectAsState()
     val user1MaxPrice by sharedViewModel.user1MaxPrice.collectAsState()
     val user2MaxPrice by sharedViewModel.user2MaxPrice.collectAsState()
+    val appConfig by sharedViewModel.appConfig.collectAsState()
     val isUser2Active = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     // Price dialog state
     var showPriceDialog by remember { mutableStateOf(false) }
-    val priceOptions = remember {
+    // Use config from backend, fallback to Constants if not loaded yet
+    val priceOptions = remember(appConfig) {
+        appConfig?.pricing?.defaultOptions ?:
         (Constants.MIN_PRICE.toInt()..Constants.MAX_PRICE.toInt()).map { it.toFloat() }
     }
 

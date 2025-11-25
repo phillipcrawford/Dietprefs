@@ -2,6 +2,60 @@ package com.example.dietprefs.network.models
 
 import com.google.gson.annotations.SerializedName
 
+// ===== Config Models =====
+
+data class AppConfig(
+    val version: String,
+    val pricing: PricingConfig,
+    val pagination: PaginationConfig,
+    val location: LocationConfig,
+    val sorting: SortingConfig
+)
+
+data class PricingConfig(
+    @SerializedName("min_price")
+    val minPrice: Float,
+    @SerializedName("max_price")
+    val maxPrice: Float,
+    @SerializedName("price_step")
+    val priceStep: Float,
+    @SerializedName("default_options")
+    val defaultOptions: List<Float>
+)
+
+data class PaginationConfig(
+    @SerializedName("default_page_size")
+    val defaultPageSize: Int,
+    @SerializedName("max_page_size")
+    val maxPageSize: Int
+)
+
+data class LocationConfig(
+    @SerializedName("max_distance_miles")
+    val maxDistanceMiles: Float,
+    @SerializedName("default_latitude")
+    val defaultLatitude: Double,
+    @SerializedName("default_longitude")
+    val defaultLongitude: Double,
+    @SerializedName("default_location_name")
+    val defaultLocationName: String
+)
+
+data class SortOption(
+    val id: String,
+    val display: String,
+    @SerializedName("default_direction")
+    val defaultDirection: String
+)
+
+data class SortingConfig(
+    val options: List<SortOption>,
+    @SerializedName("default_sort_by")
+    val defaultSortBy: String,
+    @SerializedName("default_sort_direction")
+    val defaultSortDirection: String
+)
+
 // ===== Request Models =====
 
 data class VendorSearchRequest(

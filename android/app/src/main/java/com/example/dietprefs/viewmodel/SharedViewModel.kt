@@ -12,6 +12,11 @@ import com.example.dietprefs.location.LocationService
 import com.example.dietprefs.location.UserLocation
 import com.example.dietprefs.network.models.VendorResponse
 import com.example.dietprefs.network.models.ItemResponse
+import com.example.dietprefs.network.models.AppConfig
+import com.example.dietprefs.network.models.PricingConfig
+import com.example.dietprefs.network.models.PaginationConfig
+import com.example.dietprefs.network.models.LocationConfig
+import com.example.dietprefs.network.models.SortingConfig
 import com.example.dietprefs.repository.VendorRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +45,10 @@ import kotlinx.coroutines.launch
 class SharedViewModel(
     private val repository: VendorRepository = VendorRepository()
 ) : ViewModel() {
+
+    // App configuration from backend
+    private val _appConfig = MutableStateFlow<AppConfig?>(null)
+    val appConfig: StateFlow<AppConfig?> = _appConfig.asStateFlow()
 
     // Categorical filters: Boolean preferences (vegetarian, gluten-free, etc.)
     private val _user1Prefs = MutableStateFlow<Set<Preference>>(emptySet())
@@ -114,6 +123,27 @@ class SharedViewModel(
 
     private val _selectedItemIndex = MutableStateFlow(0)
     val selectedItemIndex: StateFlow<Int> = _selectedItemIndex.asStateFlow()
+
+    init {
+        // Fetch app configuration on ViewModel initialization
+        fetchConfig()
+    }
+
+    /**
+     * Fetch application configuration from backend.
+     * This provides centralized business rules (prices, pagination, etc.)
+     * that are consistent across all clients.
+     */
+    fun fetchConfig() {
+        viewModelScope.launch {
+            repository.getConfig().onSuccess { config ->
+                _appConfig.value = config
+            }.onFailure { error ->
+                // Log error but don't block app - fall back to hardcoded Constants
+                android.util.Log.e("SharedViewModel", "Failed to fetch config", error)
+            }
+        }
+    }
 
     fun updateVisibleRange(start: Int, end: Int) {
         _visibleRange.value = start to end
