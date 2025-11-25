@@ -40,7 +40,8 @@ enum class Preference(
     NO_PEANUTS("no peanuts", "no_peanuts"),
     NO_TREENUTS("no treenuts", "no_treenuts"),
     GLUTEN_FREE("gluten-free", "gluten_free"),
-    NO_SOY("no soy", "no_soy");
+    NO_SOY("no soy", "no_soy"),
+    LOW_PRICE("low price", "low_price");
 
     companion object {
         /** Order them *exactly* as you want to show in PreferenceScreen. */
@@ -51,7 +52,8 @@ enum class Preference(
             LOW_SUGAR, HIGH_PROTEIN, LOW_CARB, NO_ALLIUMS,
             NO_PORK_PRODUCTS, NO_RED_MEAT, NO_MSG, NO_SESAME,
             NO_MILK, NO_EGGS, NO_FISH, NO_SHELLFISH,
-            NO_PEANUTS, NO_TREENUTS, GLUTEN_FREE, NO_SOY
+            NO_PEANUTS, NO_TREENUTS, GLUTEN_FREE, NO_SOY,
+            LOW_PRICE
         )
 
         /** Helper to map display string (e.g. "low sugar") to its enum. */

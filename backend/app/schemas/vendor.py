@@ -112,3 +112,5 @@ class VendorSearchResponse(BaseModel):
     """Response schema for vendor search endpoint."""
     vendors: List[VendorResponse]
     pagination: PaginationMeta
+    user1_display: str = Field(default="", description="Formatted display text for user 1 filters")
+    user2_display: str = Field(default="", description="Formatted display text for user 2 filters")

@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.dietprefs.model.Preference
 import com.example.dietprefs.ui.theme.dietprefsGrey
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
@@ -26,16 +25,13 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun TopBar(
-    user1Prefs: Set<Preference>,
-    user2Prefs: Set<Preference>,
+    user1Display: String,
+    user2Display: String,
     onBackClick: (() -> Unit)? = null,
     onSettingsClick: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     var isBackEnabled by remember { mutableStateOf(true) }
-
-    val user1Selected = user1Prefs.map { it.display }
-    val user2Selected = user2Prefs.map { it.display }
 
     Box(
         modifier = Modifier
@@ -71,7 +67,7 @@ fun TopBar(
             }
         }
 
-        // Preferences display
+        // Preferences display (using backend-provided text)
         Column(
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -79,7 +75,7 @@ fun TopBar(
                 .padding(start = 16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            if (user1Selected.isNotEmpty()) {
+            if (user1Display.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier.padding(8.dp),
@@ -93,17 +89,17 @@ fun TopBar(
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = user1Selected.joinToString(", "),
+                        text = user1Display,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = user1Red,
-                        maxLines = if (user2Selected.isEmpty()) 4 else 2,
+                        maxLines = if (user2Display.isEmpty()) 4 else 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            if (user2Selected.isNotEmpty()) {
+            if (user2Display.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier.padding(8.dp),
@@ -117,11 +113,11 @@ fun TopBar(
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = user2Selected.joinToString(", "),
+                        text = user2Display,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = user2Magenta,
-                        maxLines = if (user1Selected.isEmpty()) 4 else 2,
+                        maxLines = if (user1Display.isEmpty()) 4 else 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }

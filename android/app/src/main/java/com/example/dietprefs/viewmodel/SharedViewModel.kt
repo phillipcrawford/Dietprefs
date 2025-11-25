@@ -55,6 +55,13 @@ class SharedViewModel(
     private val _user2MaxPrice = MutableStateFlow<Float?>(null)
     val user2MaxPrice: StateFlow<Float?> = _user2MaxPrice.asStateFlow()
 
+    // Display text from backend (formatted filter descriptions)
+    private val _user1Display = MutableStateFlow("")
+    val user1Display: StateFlow<String> = _user1Display.asStateFlow()
+
+    private val _user2Display = MutableStateFlow("")
+    val user2Display: StateFlow<String> = _user2Display.asStateFlow()
+
     // Vendor results state
     private val _pagedVendors = MutableStateFlow<List<DisplayVendor>>(emptyList())
     val pagedVendors: StateFlow<List<DisplayVendor>> = _pagedVendors.asStateFlow()
@@ -177,10 +184,26 @@ class SharedViewModel(
 
     fun setUser1MaxPrice(price: Float?) {
         _user1MaxPrice.value = price
+        // Sync LOW_PRICE preference with price state
+        val currentPrefs = _user1Prefs.value.toMutableSet()
+        if (price != null) {
+            currentPrefs.add(Preference.LOW_PRICE)
+        } else {
+            currentPrefs.remove(Preference.LOW_PRICE)
+        }
+        _user1Prefs.value = currentPrefs
     }
 
     fun setUser2MaxPrice(price: Float?) {
         _user2MaxPrice.value = price
+        // Sync LOW_PRICE preference with price state
+        val currentPrefs = _user2Prefs.value.toMutableSet()
+        if (price != null) {
+            currentPrefs.add(Preference.LOW_PRICE)
+        } else {
+            currentPrefs.remove(Preference.LOW_PRICE)
+        }
+        _user2Prefs.value = currentPrefs
     }
 
     /**
@@ -194,6 +217,9 @@ class SharedViewModel(
         // Clear numeric filters
         _user1MaxPrice.value = null
         _user2MaxPrice.value = null
+        // Clear display text
+        _user1Display.value = ""
+        _user2Display.value = ""
     }
 
     fun updateSortState(column: SortColumn) {
@@ -296,6 +322,10 @@ class SharedViewModel(
                 result.onSuccess { response ->
                     _totalResultsCount.value = response.pagination.totalResults
                     totalPages = response.pagination.totalPages
+
+                    // Store display text from backend
+                    _user1Display.value = response.user1Display
+                    _user2Display.value = response.user2Display
 
                     // Cache full vendor responses
                     cachedVendorResponses = response.vendors

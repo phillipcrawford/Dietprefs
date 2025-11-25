@@ -37,25 +37,6 @@ import com.example.dietprefs.viewmodel.SharedViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * Builds a unified display string combining categorical and numeric filters.
- * Shows preferences followed by price filter if set.
- */
-private fun buildFilterDisplayText(preferences: List<String>, maxPrice: Float?): String {
-    val parts = mutableListOf<String>()
-
-    // Add preferences
-    if (preferences.isNotEmpty()) {
-        parts.add(preferences.joinToString(", "))
-    }
-
-    // Add price filter
-    if (maxPrice != null) {
-        parts.add("under $${"%.0f".format(maxPrice)}")
-    }
-
-    return parts.joinToString(", ")
-}
 
 @Composable
 fun PreferenceScreen(
@@ -71,9 +52,6 @@ fun PreferenceScreen(
     val user2MaxPrice by sharedViewModel.user2MaxPrice.collectAsState()
     val isUser2Active = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-
-    val user1Selected = user1Prefs.map { it.display }
-    val user2Selected = user2Prefs.map { it.display }
 
     // Price dialog state
     var showPriceDialog by remember { mutableStateOf(false) }
@@ -107,8 +85,8 @@ fun PreferenceScreen(
     Scaffold(
         topBar = {
             PreferencesTopBar(
-                user1Selected = user1Selected,
-                user2Selected = user2Selected,
+                user1Prefs = user1Prefs,
+                user2Prefs = user2Prefs,
                 user1MaxPrice = user1MaxPrice,
                 user2MaxPrice = user2MaxPrice,
                 onSettingsClick = onSettingsClick,
@@ -165,53 +143,35 @@ fun PreferenceScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 PreferenceGrid(
+                    preferences = Preference.orderedForUI,  // All 33 preferences including LOW_PRICE
                     user1Prefs = user1Prefs,
                     user2Prefs = user2Prefs,
                     isUser2Active = isUser2Active.value,
                     onTogglePref = { pref ->
-                        if (isUser2Active.value) {
-                            sharedViewModel.toggleUser2Pref(pref)
+                        // Special handling for LOW_PRICE: open dialog instead of simple toggle
+                        if (pref == Preference.LOW_PRICE) {
+                            showPriceDialog = true
                         } else {
-                            sharedViewModel.toggleUser1Pref(pref)
+                            if (isUser2Active.value) {
+                                sharedViewModel.toggleUser2Pref(pref)
+                            } else {
+                                sharedViewModel.toggleUser1Pref(pref)
+                            }
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(16f)
+                        .weight(17f)  // 17 rows (16.5 rounded up) for 33 items
                 )
 
-                // Last row: Price filter (numeric) and user toggle
-                // Price uses a dialog for selection, different from boolean prefs above
+                // User toggle button row
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    val currentMaxPrice = if (isUser2Active.value) user2MaxPrice else user1MaxPrice
-                    val isLowPriceSelected = currentMaxPrice != null
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .background(
-                                if (isLowPriceSelected) selectedGrey else dietprefsGrey,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .clickable {
-                                // Open price dialog
-                                showPriceDialog = true
-                            }
-                            .padding(start = 12.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Text(
-                            text = "low price",
-                            color = Color.White,
-                            fontSize = 16.sp
-                        )
-                    }
+                    Spacer(modifier = Modifier.weight(1f))
 
                     Box(
                         modifier = Modifier
@@ -221,8 +181,8 @@ fun PreferenceScreen(
                                 if (isUser2Active.value) selectedGrey else dietprefsGrey,
                                 shape = RoundedCornerShape(4.dp)
                             )
-                            .clickable(enabled = user1Selected.isNotEmpty() || user2Selected.isNotEmpty() || isUser2Active.value) {
-                                if (user1Selected.isEmpty() && user2Selected.isEmpty()) {
+                            .clickable(enabled = user1Prefs.isNotEmpty() || user2Prefs.isNotEmpty() || isUser2Active.value) {
+                                if (user1Prefs.isEmpty() && user2Prefs.isEmpty()) {
                                     isUser2Active.value = false
                                 } else {
                                     isUser2Active.value = !isUser2Active.value
@@ -278,16 +238,21 @@ fun PreferenceScreen(
 
 @Composable
 fun PreferencesTopBar(
-    user1Selected: List<String>,
-    user2Selected: List<String>,
+    user1Prefs: Set<Preference>,
+    user2Prefs: Set<Preference>,
     user1MaxPrice: Float?,
     user2MaxPrice: Float?,
     onSettingsClick: () -> Unit,
     onUserModeClick: () -> Unit
 ) {
-    // Build display text combining preferences and price filter
-    val user1DisplayText = buildFilterDisplayText(user1Selected, user1MaxPrice)
-    val user2DisplayText = buildFilterDisplayText(user2Selected, user2MaxPrice)
+    // Build display text from preferences
+    // LOW_PRICE preference is formatted as "under $X" using the price value
+    val user1DisplayText = user1Prefs
+        .map { if (it == Preference.LOW_PRICE) "under $${"%.0f".format(user1MaxPrice ?: 0)}" else it.display }
+        .joinToString(", ")
+    val user2DisplayText = user2Prefs
+        .map { if (it == Preference.LOW_PRICE) "under $${"%.0f".format(user2MaxPrice ?: 0)}" else it.display }
+        .joinToString(", ")
 
     Box(
         modifier = Modifier

@@ -12,6 +12,7 @@ from app.schemas.vendor import (
 )
 from app.schemas.item import ItemResponse, DietaryFlags, ItemRating
 from app.services.vendor_service import VendorService
+from app.services.display_service import build_display_text
 import math
 
 router = APIRouter()
@@ -37,6 +38,10 @@ async def search_vendors(
 
     total_pages = math.ceil(total_count / request.page_size) if total_count > 0 else 0
 
+    # Generate display text for both users
+    user1_display = build_display_text(request.user1_preferences, request.user1_max_price)
+    user2_display = build_display_text(request.user2_preferences, request.user2_max_price)
+
     return VendorSearchResponse(
         vendors=vendors,
         pagination=PaginationMeta(
@@ -44,7 +49,9 @@ async def search_vendors(
             page_size=request.page_size,
             total_results=total_count,
             total_pages=total_pages
-        )
+        ),
+        user1_display=user1_display,
+        user2_display=user2_display
     )
 
 

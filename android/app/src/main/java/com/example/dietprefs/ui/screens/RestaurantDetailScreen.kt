@@ -39,6 +39,8 @@ fun RestaurantDetailScreen(
 ) {
     val user1Prefs by sharedViewModel.user1Prefs.collectAsState()
     val user2Prefs by sharedViewModel.user2Prefs.collectAsState()
+    val user1Display by sharedViewModel.user1Display.collectAsState()
+    val user2Display by sharedViewModel.user2Display.collectAsState()
     val selectedVendor by sharedViewModel.selectedVendor.collectAsState()
     val menuItems by sharedViewModel.menuItems.collectAsState()
     val isLoadingItems by sharedViewModel.isLoadingItems.collectAsState()
@@ -64,8 +66,8 @@ fun RestaurantDetailScreen(
     Scaffold(
         topBar = {
             TopBar(
-                user1Prefs = user1Prefs,
-                user2Prefs = user2Prefs,
+                user1Display = user1Display,
+                user2Display = user2Display,
                 onBackClick = { navController.popBackStack() },
                 onSettingsClick = onSettingsClick
             )

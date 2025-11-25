@@ -55,6 +55,8 @@ fun SearchResultsScreen(
 
     val user1Prefs by sharedViewModel.user1Prefs.collectAsState()
     val user2Prefs by sharedViewModel.user2Prefs.collectAsState()
+    val user1Display by sharedViewModel.user1Display.collectAsState()
+    val user2Display by sharedViewModel.user2Display.collectAsState()
     val isLoading by sharedViewModel.isLoading.collectAsState()
 
     val listState = rememberLazyListState()
@@ -92,8 +94,8 @@ fun SearchResultsScreen(
     Scaffold(
         topBar = {
             TopBar(
-                user1Prefs = user1Prefs,
-                user2Prefs = user2Prefs,
+                user1Display = user1Display,
+                user2Display = user2Display,
                 onBackClick = { navController.popBackStack() },
                 onSettingsClick = onSettingsClick
             )

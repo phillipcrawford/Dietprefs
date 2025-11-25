@@ -11,12 +11,12 @@ import androidx.compose.ui.unit.dp
 import com.example.dietprefs.model.Preference
 
 /**
- * Grid display for dietary preference selection (16 rows x 2 columns).
- * First 8 rows use grey theme, last 8 rows use teal theme.
+ * Grid display for dietary preference selection (2 columns, dynamic rows).
+ * First 8 rows use grey theme, remaining rows use teal theme.
  */
 @Composable
 fun PreferenceGrid(
-    preferences: List<Preference> = Preference.orderedForUI.take(32),
+    preferences: List<Preference> = Preference.orderedForUI,
     user1Prefs: Set<Preference>,
     user2Prefs: Set<Preference>,
     isUser2Active: Boolean,
@@ -27,7 +27,7 @@ fun PreferenceGrid(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
-        val rows = preferences.chunked(2).take(16)
+        val rows = preferences.chunked(2)
 
         rows.forEachIndexed { rowIndex, rowPrefs ->
             val isTealRow = rowIndex >= 8

@@ -28,7 +28,11 @@ data class VendorSearchRequest(
 
 data class VendorSearchResponse(
     val vendors: List<VendorResponse>,
-    val pagination: PaginationMeta
+    val pagination: PaginationMeta,
+    @SerializedName("user1_display")
+    val user1Display: String = "",
+    @SerializedName("user2_display")
+    val user2Display: String = ""
 )
 
 data class PaginationMeta(
