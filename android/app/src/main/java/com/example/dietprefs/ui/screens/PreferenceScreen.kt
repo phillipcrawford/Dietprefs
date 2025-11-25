@@ -143,36 +143,57 @@ fun PreferenceScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 PreferenceGrid(
-                    preferences = Preference.orderedForUI,  // All 33 preferences including LOW_PRICE
+                    preferences = Preference.orderedForUI.take(32),  // First 32 preferences (exclude LOW_PRICE)
                     user1Prefs = user1Prefs,
                     user2Prefs = user2Prefs,
                     isUser2Active = isUser2Active.value,
                     onTogglePref = { pref ->
-                        // Special handling for LOW_PRICE: open dialog instead of simple toggle
-                        if (pref == Preference.LOW_PRICE) {
-                            showPriceDialog = true
+                        if (isUser2Active.value) {
+                            sharedViewModel.toggleUser2Pref(pref)
                         } else {
-                            if (isUser2Active.value) {
-                                sharedViewModel.toggleUser2Pref(pref)
-                            } else {
-                                sharedViewModel.toggleUser1Pref(pref)
-                            }
+                            sharedViewModel.toggleUser1Pref(pref)
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(17f)  // 17 rows (16.5 rounded up) for 33 items
+                        .weight(16f)  // 16 rows for 32 items
                 )
 
-                // User toggle button row
+                // Row 17: Low price button and user toggle button
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    Spacer(modifier = Modifier.weight(1f))
+                    // Low price button
+                    val isLowPriceSelected = if (isUser2Active.value)
+                        user2Prefs.contains(Preference.LOW_PRICE)
+                    else
+                        user1Prefs.contains(Preference.LOW_PRICE)
 
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(
+                                if (isLowPriceSelected) selectedGrey else dietprefsGrey,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .clickable {
+                                showPriceDialog = true
+                            }
+                            .padding(start = 12.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Text(
+                            text = "low price",
+                            color = Color.White,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    // User toggle button
                     Box(
                         modifier = Modifier
                             .weight(1f)
