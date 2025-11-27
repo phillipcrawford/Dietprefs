@@ -44,7 +44,7 @@ enum class Preference(
     LOW_PRICE("low price", "low_price");
 
     companion object {
-        /** Order them *exactly* as you want to show in PreferencueScreen. */
+        /** Order them *exactly* as you want to show in PreferenceScreen. */
         val orderedForUI: List<Preference> = listOf(
             VEGETARIAN, PESCETARIAN, VEGAN, KETO, ORGANIC, GMO_FREE,
             LOCALLY_SOURCED, RAW, ENTREE, SWEET, KOSHER, HALAL,
