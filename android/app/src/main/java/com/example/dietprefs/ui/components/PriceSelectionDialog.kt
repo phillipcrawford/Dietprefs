@@ -100,12 +100,12 @@ fun PriceSelectionDialog(
                         onDismiss()
                     }
                 ) {
-                    Text("Clear")
+                    Text("Clear", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text("Cancel", color = Color.White)
                 }
             },
             containerColor = dietprefsGrey,
