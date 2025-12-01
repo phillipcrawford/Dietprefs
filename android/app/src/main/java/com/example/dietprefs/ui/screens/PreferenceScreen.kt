@@ -56,10 +56,11 @@ fun PreferenceScreen(
 
     // Price dialog state
     var showPriceDialog by remember { mutableStateOf(false) }
-    // Use config from backend, fallback to Constants if not loaded yet
+    // Generate price options in $1 increments from $5 to $30
     val priceOptions = remember(appConfig) {
-        appConfig?.pricing?.defaultOptions ?:
-        (Constants.MIN_PRICE.toInt()..Constants.MAX_PRICE.toInt()).map { it.toFloat() }
+        val minPrice = appConfig?.pricing?.minPrice?.toInt() ?: Constants.MIN_PRICE.toInt()
+        val maxPrice = appConfig?.pricing?.maxPrice?.toInt() ?: Constants.MAX_PRICE.toInt()
+        (minPrice..maxPrice).map { it.toFloat() }
     }
 
     // Location permission launcher

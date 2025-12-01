@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,11 +56,14 @@ fun PriceSelectionDialog(
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    // Scrollable list of price options
+                    // Scrollable list of price options (6 items visible at a time)
+                    // Each item is ~44dp (12dp padding top + 16sp text + 12dp padding bottom + 4dp spacing)
+                    // 6 items = 264dp (44dp * 6)
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 300.dp),
+                            .height(264.dp)
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         priceOptions.forEach { price ->
