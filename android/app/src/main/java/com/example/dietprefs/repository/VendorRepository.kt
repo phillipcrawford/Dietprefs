@@ -30,6 +30,7 @@ class VendorRepository(
         user2MaxPrice: Float? = null,
         latitude: Double? = null,
         longitude: Double? = null,
+        searchQuery: String? = null,
         sortBy: String = "item_count",
         sortDirection: String = "desc",
         page: Int = 1,
@@ -43,13 +44,14 @@ class VendorRepository(
                 user2MaxPrice = user2MaxPrice,
                 lat = latitude,
                 lng = longitude,
+                searchQuery = searchQuery,
                 sortBy = sortBy,
                 sortDirection = sortDirection,
                 page = page,
                 pageSize = pageSize
             )
 
-            Log.d("VendorRepository", "Searching with location: lat=$latitude, lng=$longitude")
+            Log.d("VendorRepository", "Searching with location: lat=$latitude, lng=$longitude, query=$searchQuery")
             Log.d("VendorRepository", "Request: $request")
 
             val response = apiService.searchVendors(request)

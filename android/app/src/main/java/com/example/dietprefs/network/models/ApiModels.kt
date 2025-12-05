@@ -69,6 +69,8 @@ data class VendorSearchRequest(
     val user2MaxPrice: Float? = null,
     val lat: Double? = null,
     val lng: Double? = null,
+    @SerializedName("search_query")
+    val searchQuery: String? = null,
     @SerializedName("sort_by")
     val sortBy: String = "item_count",
     @SerializedName("sort_direction")

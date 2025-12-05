@@ -40,6 +40,17 @@ class VendorService:
                 Vendor.lng.between(request.lng - lng_delta, request.lng + lng_delta)
             )
 
+        # Apply text search filter (case-insensitive partial matching)
+        if request.search_query and request.search_query.strip():
+            search_pattern = f"%{request.search_query.strip()}%"
+            query = query.filter(
+                or_(
+                    Vendor.name.ilike(search_pattern),
+                    Vendor.address.ilike(search_pattern),
+                    Vendor.seo_tags.ilike(search_pattern)
+                )
+            )
+
         # Check if price filters or preferences are active
         user1_has_price = request.user1_max_price is not None
         user2_has_price = request.user2_max_price is not None

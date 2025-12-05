@@ -64,6 +64,10 @@ class SharedViewModel(
     private val _user2MaxPrice = MutableStateFlow<Float?>(null)
     val user2MaxPrice: StateFlow<Float?> = _user2MaxPrice.asStateFlow()
 
+    // Text search query
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
     // Display text from backend (formatted filter descriptions)
     private val _user1Display = MutableStateFlow("")
     val user1Display: StateFlow<String> = _user1Display.asStateFlow()
@@ -236,6 +240,10 @@ class SharedViewModel(
         _user2Prefs.value = currentPrefs
     }
 
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
     /**
      * Clears all filters for both users.
      * This includes both categorical filters (preferences) and numeric filters (price).
@@ -247,6 +255,8 @@ class SharedViewModel(
         // Clear numeric filters
         _user1MaxPrice.value = null
         _user2MaxPrice.value = null
+        // Clear search query
+        _searchQuery.value = ""
         // Clear display text
         _user1Display.value = ""
         _user2Display.value = ""
@@ -343,6 +353,7 @@ class SharedViewModel(
                     user2MaxPrice = _user2MaxPrice.value,
                     latitude = _userLocation.value?.latitude,
                     longitude = _userLocation.value?.longitude,
+                    searchQuery = _searchQuery.value.ifBlank { null },
                     sortBy = sortBy,
                     sortDirection = sortDirection,
                     page = currentPage,
@@ -406,6 +417,7 @@ class SharedViewModel(
                     user2MaxPrice = _user2MaxPrice.value,
                     latitude = _userLocation.value?.latitude,
                     longitude = _userLocation.value?.longitude,
+                    searchQuery = _searchQuery.value.ifBlank { null },
                     sortBy = sortBy,
                     sortDirection = sortDirection,
                     page = currentPage,

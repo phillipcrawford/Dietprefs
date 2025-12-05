@@ -94,6 +94,7 @@ class VendorSearchRequest(BaseModel):
     user2_max_price: Optional[float] = Field(None, description="Maximum price filter for user 2")
     lat: Optional[float] = Field(None, description="User latitude for distance calculation")
     lng: Optional[float] = Field(None, description="User longitude for distance calculation")
+    search_query: Optional[str] = Field(None, description="Text search across vendor name, address, and tags")
     sort_by: str = Field("item_count", description="Sort by: rating, distance, or item_count")
     sort_direction: str = Field("desc", description="Sort direction: asc or desc")
     page: int = Field(1, ge=1, description="Page number (starts at 1)")

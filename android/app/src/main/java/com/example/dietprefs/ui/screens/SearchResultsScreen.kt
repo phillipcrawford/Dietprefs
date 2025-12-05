@@ -58,15 +58,26 @@ fun SearchResultsScreen(
     val user1Display by sharedViewModel.user1Display.collectAsState()
     val user2Display by sharedViewModel.user2Display.collectAsState()
     val isLoading by sharedViewModel.isLoading.collectAsState()
+    val searchQuery by sharedViewModel.searchQuery.collectAsState()
 
     val listState = rememberLazyListState()
-    var searchQuery by remember { mutableStateOf("") } // Local search query
     val coroutineScope = rememberCoroutineScope()
 
     // Determine user mode for results display
     val isTwoUserMode = user1Prefs.isNotEmpty() && user2Prefs.isNotEmpty()
 
     // --- Effects ---
+    // Debounced search - trigger backend search when query changes
+    LaunchedEffect(searchQuery) {
+        if (searchQuery.isBlank() && user1Prefs.isEmpty() && user2Prefs.isEmpty()) {
+            // Skip search if no query and no preferences
+            return@LaunchedEffect
+        }
+        // Debounce: wait 300ms before triggering search
+        delay(300)
+        sharedViewModel.searchVendors()
+    }
+
     // Scroll to top when sort state changes
     LaunchedEffect(sortState) {
         listState.scrollToItem(0)
@@ -308,7 +319,7 @@ fun SearchResultsScreen(
 
             // --- Results List or Empty State ---
             Box(modifier = Modifier.weight(1f)) {
-                if (pagedVendors.filter { it.vendorName.contains(searchQuery, ignoreCase = true) }.isEmpty()) {
+                if (pagedVendors.isEmpty()) {
                     // Empty state - but keep structure visible
                     Box(
                         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -329,9 +340,7 @@ fun SearchResultsScreen(
                         state = listState
                     ) {
                     itemsIndexed(
-                        items = pagedVendors.filter {
-                            it.vendorName.contains(searchQuery, ignoreCase = true)
-                        },
+                        items = pagedVendors,
                         key = { _, vendor -> vendor.vendorName + vendor.querySpecificRatingString } // More unique key
                     ) { index, vendor ->
                         VendorListItem(
@@ -361,7 +370,7 @@ fun SearchResultsScreen(
             // --- Search Bar ---
             VendorSearchBar(
                 searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it }
+                onSearchQueryChange = { sharedViewModel.setSearchQuery(it) }
             )
 
             // --- Filter Buttons (from your existing code, simplified) ---
