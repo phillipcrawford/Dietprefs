@@ -41,6 +41,27 @@ async def health_check():
     return {"status": "healthy"}
 
 
+@app.post("/seed")
+async def seed_database_endpoint():
+    """
+    Seed the database with sample restaurant data.
+    This will clear existing data and repopulate with fresh seed data.
+    Can be called multiple times to refresh the database.
+    """
+    try:
+        from app.seed import seed_database
+        seed_database()
+        return {
+            "status": "success",
+            "message": "Database seeded successfully with 20 restaurants"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to seed database: {str(e)}"
+        }
+
+
 # Include API routers
 app.include_router(config.router, prefix=settings.API_V1_PREFIX, tags=["config"])
 app.include_router(vendors.router, prefix=settings.API_V1_PREFIX, tags=["vendors"])
