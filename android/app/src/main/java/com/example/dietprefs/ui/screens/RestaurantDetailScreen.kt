@@ -1,6 +1,7 @@
 package com.example.dietprefs.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -104,6 +105,7 @@ fun RestaurantDetailScreen(
                     // Scrollable stack (restaurant header + menu items)
                     LazyColumn(
                         state = listState,
+                        userScrollEnabled = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(204.dp) // 60dp header + 48dp * 3 items = 204dp
@@ -112,7 +114,8 @@ fun RestaurantDetailScreen(
                         item {
                             RestaurantHeaderItem(
                                 vendor = selectedVendor!!,
-                                isSelected = selectedIndex == 0
+                                isSelected = selectedIndex == 0,
+                                onClick = { sharedViewModel.updateSelectedItemIndex(0) }
                             )
                         }
 
@@ -123,7 +126,8 @@ fun RestaurantDetailScreen(
                                 item = item,
                                 position = index + 1,
                                 totalItems = menuItems.size,
-                                isSelected = selectedIndex == itemIndex
+                                isSelected = selectedIndex == itemIndex,
+                                onClick = { sharedViewModel.updateSelectedItemIndex(itemIndex) }
                             )
                         }
                     }
@@ -172,7 +176,8 @@ fun RestaurantDetailScreen(
 @Composable
 fun RestaurantHeaderItem(
     vendor: com.example.dietprefs.network.models.VendorResponse,
-    isSelected: Boolean
+    isSelected: Boolean,
+    onClick: () -> Unit
 ) {
     val backgroundColor = if (isSelected) restaurantSelectedGold else restaurantDeselectedGold
 
@@ -180,7 +185,8 @@ fun RestaurantHeaderItem(
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp) // 1.25x of 48dp
-            .background(backgroundColor),
+            .background(backgroundColor)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.CenterStart
     ) {
         Column(
@@ -201,7 +207,8 @@ fun MenuItemRow(
     item: com.example.dietprefs.network.models.ItemResponse,
     position: Int,
     totalItems: Int,
-    isSelected: Boolean
+    isSelected: Boolean,
+    onClick: () -> Unit
 ) {
     val backgroundColor = if (isSelected) Color(0xFF90EE90) else Color(0xFF228B22) // Light green vs dark green
 
@@ -210,6 +217,7 @@ fun MenuItemRow(
             .fillMaxWidth()
             .height(48.dp) // Match SearchResultsScreen vendor height
             .background(backgroundColor)
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
