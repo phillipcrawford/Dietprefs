@@ -58,10 +58,13 @@ fun RestaurantDetailScreen(
         }
     }
 
-    // Simple snap-based selection: whichever item is snapped to top is selected
+    // Select second visible item from top (more centered in viewport)
     LaunchedEffect(listState.firstVisibleItemIndex, listState.isScrollInProgress) {
         if (!listState.isScrollInProgress) {
-            sharedViewModel.updateSelectedItemIndex(listState.firstVisibleItemIndex)
+            val secondVisibleIndex = listState.firstVisibleItemIndex + 1
+            val maxIndex = menuItems.size // 0 is restaurant, menuItems.size is last item
+            val clampedIndex = secondVisibleIndex.coerceIn(0, maxIndex)
+            sharedViewModel.updateSelectedItemIndex(clampedIndex)
         }
     }
 
@@ -108,6 +111,7 @@ fun RestaurantDetailScreen(
                         state = listState,
                         flingBehavior = snapFlingBehavior,
                         userScrollEnabled = true,
+                        contentPadding = PaddingValues(bottom = 156.dp), // Allow all items to scroll to top
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(204.dp) // 60dp header + 48dp * 3 items = 204dp
