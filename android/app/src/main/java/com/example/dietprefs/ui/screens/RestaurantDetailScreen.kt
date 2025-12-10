@@ -2,6 +2,7 @@ package com.example.dietprefs.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -48,6 +49,7 @@ fun RestaurantDetailScreen(
     val selectedIndex by sharedViewModel.selectedItemIndex.collectAsState()
 
     val listState = rememberLazyListState()
+    val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
 
     // Fetch menu items when screen loads
     LaunchedEffect(selectedVendor) {
@@ -56,9 +58,8 @@ fun RestaurantDetailScreen(
         }
     }
 
-    // Track scroll position to determine selected index
+    // Simple snap-based selection: whichever item is snapped to top is selected
     LaunchedEffect(listState.firstVisibleItemIndex, listState.isScrollInProgress) {
-        // Only update when not actively scrolling to reduce recompositions
         if (!listState.isScrollInProgress) {
             sharedViewModel.updateSelectedItemIndex(listState.firstVisibleItemIndex)
         }
@@ -105,6 +106,7 @@ fun RestaurantDetailScreen(
                     // Scrollable stack (restaurant header + menu items)
                     LazyColumn(
                         state = listState,
+                        flingBehavior = snapFlingBehavior,
                         userScrollEnabled = true,
                         modifier = Modifier
                             .fillMaxWidth()
