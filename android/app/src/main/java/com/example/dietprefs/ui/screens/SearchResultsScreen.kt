@@ -39,7 +39,6 @@ import com.example.dietprefs.ui.components.VendorSearchBar
 import com.example.dietprefs.ui.components.table.SortableHeader
 import com.example.dietprefs.viewmodel.SharedViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun SearchResultsScreen(

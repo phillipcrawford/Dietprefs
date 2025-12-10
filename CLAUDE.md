@@ -108,6 +108,40 @@ Dietprefs is a restaurant discovery app that helps users find restaurants matchi
    - `PreferenceScreen.kt`: 482 → ~350 lines
    - Backend `vendor_service.py`: 327 → 237 lines
 
+### RestaurantDetailScreen Scrolling & Selection (Completed)
+**Goal**: Fix scrolling and selection UX for restaurant detail screen with fixed 204dp viewport.
+
+**Problem**: With a fixed-height scrollable area (204dp) containing restaurant header (60dp) + menu items (48dp each), items near the end of the list couldn't scroll to the top position, causing `firstVisibleItemIndex` to stop incrementing and breaking selection logic.
+
+**Solution Implemented**:
+1. **Snap scrolling behavior**: Added `rememberSnapFlingBehavior` to LazyColumn for tactile snap-to-position feedback
+2. **Click-to-select**: Made restaurant header and menu items clickable for direct selection
+3. **Second-item selection**: Auto-selection based on second visible item from top (not first) for better viewport centering
+4. **Bottom padding**: Added 156dp bottom padding to LazyColumn via `contentPadding` parameter
+   - Allows all items (including last item) to scroll to top position
+   - Calculation: 204dp viewport - 48dp item height = 156dp padding needed
+   - Ensures `firstVisibleItemIndex` can increment through all items
+
+**UX Improvements**:
+- ✅ All menu items accessible via scrolling (fixed "stuck at item 3 of 7" issue)
+- ✅ Snap scrolling provides clear item positioning
+- ✅ Dual interaction: scroll to browse OR tap to select directly
+- ✅ Selection follows scroll position naturally while allowing manual clicks
+
+**Technical Details** (`RestaurantDetailScreen.kt`):
+```kotlin
+LazyColumn(
+    state = listState,
+    flingBehavior = snapFlingBehavior,
+    contentPadding = PaddingValues(bottom = 156.dp), // Key fix
+    modifier = Modifier.fillMaxWidth().height(204.dp)
+)
+```
+- Selection logic: `secondVisibleIndex = firstVisibleItemIndex + 1`
+- Click handlers directly call `sharedViewModel.updateSelectedItemIndex()`
+
+---
+
 ## Architecture
 
 ### Multi-Client Design
@@ -246,6 +280,8 @@ MAX_DISTANCE_MILES = 10.0
 - ✅ Restaurant search with dietary preferences + price filters
 - ✅ Dual-user mode (two sets of filters working independently)
 - ✅ Restaurant detail screen with correct item filtering
+- ✅ Restaurant detail scrolling with snap behavior and click-to-select
+- ✅ All menu items accessible via scrolling (bottom padding solution)
 - ✅ Distance-based search (10-mile radius)
 - ✅ Sorting by rating, distance, or item count
 - ✅ Pagination with local caching and API fetching
