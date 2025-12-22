@@ -86,7 +86,7 @@ fun VendorListItem(
                 color = Color.White,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(end = 16.dp, top = 20.dp, bottom = 10.dp)
+                    .padding(end = 16.dp, top = 22.dp, bottom = 10.dp)
             )
         }
 
