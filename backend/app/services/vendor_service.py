@@ -40,38 +40,53 @@ class VendorService:
                 Vendor.lng.between(request.lng - lng_delta, request.lng + lng_delta)
             )
 
-        # Apply text search filter (case-insensitive partial matching)
-        if request.search_query and request.search_query.strip():
-            search_pattern = f"%{request.search_query.strip()}%"
-            query = query.filter(
-                or_(
-                    Vendor.name.ilike(search_pattern),
-                    Vendor.address.ilike(search_pattern),
-                    Vendor.seo_tags.ilike(search_pattern)
-                )
-            )
-
         # Check if price filters or preferences are active
         user1_has_price = request.user1_max_price is not None
         user2_has_price = request.user2_max_price is not None
+        has_search_query = bool(request.search_query and request.search_query.strip())
 
-        # If preferences or price filters are active, filter to vendors that have at least one matching item
-        if is_user1_active or is_user2_active or user1_has_price or user2_has_price:
-            # Build filters for each user (including price)
+        # Determine if we need to join with Item table
+        needs_preference_filter = is_user1_active or is_user2_active or user1_has_price or user2_has_price
+        needs_item_join = has_search_query or needs_preference_filter
+
+        # Build filter conditions
+        search_filter = None
+        preference_filter = None
+
+        # Build text search filter (vendor fields OR item names)
+        if has_search_query:
+            search_pattern = f"%{request.search_query.strip()}%"
+            search_filter = or_(
+                Vendor.name.ilike(search_pattern),
+                Vendor.address.ilike(search_pattern),
+                Vendor.seo_tags.ilike(search_pattern),
+                Item.name.ilike(search_pattern)
+            )
+
+        # Build preference filter
+        if needs_preference_filter:
             user1_filter = FilterService.build_preference_filter(user1_prefs, request.user1_max_price)
             user2_filter = FilterService.build_preference_filter(user2_prefs, request.user2_max_price)
 
             # Combine with OR: vendor must have items matching user1 OR user2
             if user1_filter is not None and user2_filter is not None:
-                combined_filter = or_(user1_filter, user2_filter)
+                preference_filter = or_(user1_filter, user2_filter)
             elif user1_filter is not None:
-                combined_filter = user1_filter
+                preference_filter = user1_filter
             else:
-                combined_filter = user2_filter
+                preference_filter = user2_filter
 
-            # Join with items and filter
-            if combined_filter is not None:
-                query = query.join(Item).filter(combined_filter).distinct()
+        # Join with items once if needed and apply filters
+        if needs_item_join:
+            query = query.join(Item)
+
+            # Apply filters (both must match if both exist)
+            if search_filter is not None:
+                query = query.filter(search_filter)
+            if preference_filter is not None:
+                query = query.filter(preference_filter)
+
+            query = query.distinct()
 
         # Execute query to get vendors (with items eagerly loaded)
         vendors = query.all()
