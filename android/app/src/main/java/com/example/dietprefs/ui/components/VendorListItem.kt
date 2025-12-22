@@ -76,17 +76,17 @@ fun VendorListItem(
                 color = Color.White,
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(start = 16.dp, top = 10.dp, bottom = 10.dp)
+                    .padding(start = 12.dp, top = 7.dp, bottom = 10.dp)
             )
 
             // Rating String - Aligned to TopEnd
             Text(
                 text = vendor.querySpecificRatingString,
-                fontSize = 13.sp,
+                fontSize = 11.sp,
                 color = Color.White,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(end = 16.dp, top = 10.dp, bottom = 10.dp)
+                    .padding(end = 16.dp, top = 15.dp, bottom = 10.dp)
             )
         }
 
