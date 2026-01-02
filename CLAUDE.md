@@ -108,6 +108,56 @@ Dietprefs is a restaurant discovery app that helps users find restaurants matchi
    - `PreferenceScreen.kt`: 482 → ~350 lines
    - Backend `vendor_service.py`: 327 → 237 lines
 
+### VendorListItem Text Spacing Fixes (Completed)
+**Goal**: Fix text overlap between vendor name and rating display in search results.
+
+**Problem**: In `VendorListItem.kt`, vendor names (e.g., "Smoothie Bar & Juice") overlapped with rating text (e.g., "144/187") in the 48dp row height.
+
+**Solution Implemented**:
+1. **Rating text** (VendorListItem.kt:89):
+   - Font size: 13sp → **11sp** (reduced visual weight)
+   - Top padding: 10dp → **22dp** (shifted down significantly)
+2. **Vendor name** (VendorListItem.kt:79):
+   - Start padding: 16dp → **12dp** (shifted left 4dp)
+   - Top padding: 10dp → **6dp** (shifted up 4dp)
+
+**Result**:
+- 16dp vertical separation between vendor name and rating (22dp - 6dp)
+- Row height remains 48dp (unchanged)
+- Clean visual separation with no text overlap
+
+---
+
+### Backend Search Enhancement: Item Name Search (Completed)
+**Goal**: Allow search to match menu item names, not just vendor names/addresses.
+
+**Problem**: Searching for "Fettuccine" or "Fett" wouldn't find restaurants that have those menu items. Search only matched vendor name, address, and SEO tags.
+
+**Solution Implemented** (`backend/app/services/vendor_service.py:43-91`):
+1. **Refactored search logic**: Consolidated text search and preference filtering to avoid duplicate joins
+2. **Added item name search**: Search pattern now includes `Item.name.ilike(search_pattern)`
+3. **Smart join handling**: Join Item table once if needed for search OR preferences
+4. **Correct filter logic**: Search filter AND preference filter (both must match if both exist)
+
+**Technical Details**:
+```python
+# Build text search filter (vendor fields OR item names)
+search_filter = or_(
+    Vendor.name.ilike(search_pattern),
+    Vendor.address.ilike(search_pattern),
+    Vendor.seo_tags.ilike(search_pattern),
+    Item.name.ilike(search_pattern)  # NEW
+)
+```
+
+**Result**:
+- Searching "Fettuccine" finds all restaurants with that menu item
+- Still respects preference filters (only shows if preferences match)
+- All preference-filtered items shown (not just the searched item)
+- **Status**: Implemented, not yet tested
+
+---
+
 ### RestaurantDetailScreen Scrolling & Selection (Completed)
 **Goal**: Fix scrolling and selection UX for restaurant detail screen with fixed 204dp viewport.
 
@@ -301,3 +351,26 @@ MAX_DISTANCE_MILES = 10.0
 - Localization support in config responses
 - Feature flags for A/B testing
 - Region-specific configuration
+
+## Known Issues & Limitations
+
+### Android Emulator: Keyboard Toolbar Behavior
+**Issue**: On Android emulators with hardware keyboard enabled (default configuration), text fields may show a floating toolbar with hamburger/microphone/backspace/search/emoji buttons instead of the soft keyboard.
+
+**Root Cause**:
+- Emulator detects host computer's keyboard as a hardware keyboard
+- Android's default behavior is to hide soft keyboard when hardware keyboard is present
+- Shows floating toolbar as alternative input method
+
+**Workaround for Development**:
+```bash
+# Enable soft keyboard even with hardware keyboard present
+adb shell settings put secure show_ime_with_hard_keyboard 1
+```
+
+**Expected Behavior on Real Devices**:
+- Real devices without hardware keyboards show soft keyboard normally
+- This is an emulator-specific development issue, not a production concern
+- Users with physical keyboards (rare on phones) may see similar behavior, which is expected Android OS behavior
+
+**Not Fixed in App Code**: This is Android system-level behavior that cannot be overridden from application code. The workaround requires system settings or ADB configuration.
