@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -372,23 +373,60 @@ fun SearchResultsScreen(
                 onSearchQueryChange = { sharedViewModel.setSearchQuery(it) }
             )
 
-            // --- Filter Buttons (from your existing code, simplified) ---
-            // This part is kept as you had it, functionality for these buttons is separate.
+            // --- Filter Buttons ---
             Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 4.dp)) {
-                Text("Filter by (Not Implemented):", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 4.dp))
-                for (row in 0 until 2) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        for (col in 0 until 5) {
-                            val filterName = "Type ${(row * 5) + col + 1}"
-                            FilterButton(label = filterName, onClick = { /* TODO */ })
-                        }
-                    }
-                    if (row < 1) Spacer(modifier = Modifier.height(8.dp)) // Spacer only between rows
+                Text("Filter by:", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 4.dp))
+
+                // Row 1: Delivery, Open, USA, Europe, North Africa/Middle East
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    CompactFilterButton(label = "Delivery", onClick = { /* TODO */ })
+                    CompactFilterButton(label = "Open", onClick = { /* TODO */ })
+                    CompactFilterButton(label = "USA", onClick = { /* TODO */ }) // TODO: Replace with icon
+                    CompactFilterButton(label = "Europe", onClick = { /* TODO */ }) // TODO: Replace with icon
+                    CompactFilterButton(label = "N Afr/ME", onClick = { /* TODO */ }) // TODO: Replace with icon
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Row 2: Takeout, Fusion, Mexico & South, Sub Saharan Africa, East Asia
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    CompactFilterButton(label = "Takeout", onClick = { /* TODO */ })
+                    CompactFilterButton(label = "Fusion", onClick = { /* TODO */ })
+                    CompactFilterButton(label = "Mex & SA", onClick = { /* TODO */ }) // TODO: Replace with icon
+                    CompactFilterButton(label = "Sub Sah", onClick = { /* TODO */ }) // TODO: Replace with icon
+                    CompactFilterButton(label = "E Asia", onClick = { /* TODO */ }) // TODO: Replace with icon
                 }
             }
         }
+    }
+}
+
+/**
+ * Compact, fixed-size filter button for icon-like appearance.
+ * Text is truncated to fit within fixed width.
+ */
+@Composable
+private fun CompactFilterButton(
+    label: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.size(width = 64.dp, height = 40.dp),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = label,
+            fontSize = 10.sp,
+            maxLines = 1,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
