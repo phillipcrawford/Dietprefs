@@ -26,8 +26,8 @@ fun VendorSearchBar(
         placeholder = { Text("Search vendors...") },
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(24.dp),
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color(0xFFF0F0F0),
             unfocusedContainerColor = Color(0xFFF0F0F0),
