@@ -423,7 +423,7 @@ private fun CompactFilterButton(
     ) {
         Text(
             text = label,
-            fontSize = 10.sp,
+            fontSize = 12.sp,
             maxLines = 1,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
