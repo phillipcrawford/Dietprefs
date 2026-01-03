@@ -374,9 +374,7 @@ fun SearchResultsScreen(
             )
 
             // --- Filter Buttons ---
-            Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 4.dp)) {
-                Text("Filter by:", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 4.dp))
-
+            Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 6.dp)) {
                 // Row 1: Delivery, Open, USA, Europe, North Africa/Middle East
                 Row(
                     modifier = Modifier.fillMaxWidth(),
