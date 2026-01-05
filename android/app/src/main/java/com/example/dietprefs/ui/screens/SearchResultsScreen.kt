@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -418,10 +420,11 @@ private fun CompactFilterButton(
     label: String,
     onClick: () -> Unit
 ) {
-    Button(
+    OutlinedButton(
         onClick = onClick,
         modifier = Modifier.size(width = 64.dp, height = 40.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+        border = androidx.compose.foundation.BorderStroke(2.dp, backgroundGrey)
     ) {
         Text(
             text = label,
