@@ -34,7 +34,8 @@ class VendorRepository(
         sortBy: String = "item_count",
         sortDirection: String = "desc",
         page: Int = 1,
-        pageSize: Int = 10
+        pageSize: Int = 10,
+        vendorFilters: List<String> = emptyList()
     ): Result<VendorSearchResponse> {
         return try {
             val request = VendorSearchRequest(
@@ -48,7 +49,8 @@ class VendorRepository(
                 sortBy = sortBy,
                 sortDirection = sortDirection,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                vendorFilters = vendorFilters
             )
 
             Log.d("VendorRepository", "Searching with location: lat=$latitude, lng=$longitude, query=$searchQuery")

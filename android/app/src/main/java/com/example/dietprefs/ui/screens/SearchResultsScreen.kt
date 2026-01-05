@@ -63,20 +63,17 @@ fun SearchResultsScreen(
     val user2Display by sharedViewModel.user2Display.collectAsState()
     val isLoading by sharedViewModel.isLoading.collectAsState()
     val searchQuery by sharedViewModel.searchQuery.collectAsState()
+    val errorMessage by sharedViewModel.errorMessage.collectAsState()
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    // Track selected filters (local state for now)
-    var selectedFilters by remember { mutableStateOf(setOf<String>()) }
+    // Track selected filters (from ViewModel)
+    val selectedFilters by sharedViewModel.vendorFilters.collectAsState()
 
     // Helper function to toggle filter selection
     fun toggleFilter(filterName: String) {
-        selectedFilters = if (filterName in selectedFilters) {
-            selectedFilters - filterName
-        } else {
-            selectedFilters + filterName
-        }
+        sharedViewModel.toggleVendorFilter(filterName)
     }
 
     // Determine user mode for results display
@@ -91,6 +88,11 @@ fun SearchResultsScreen(
         }
         // Debounce: wait 300ms before triggering search
         delay(300)
+        sharedViewModel.searchVendors()
+    }
+
+    // Trigger search when vendor filters change
+    LaunchedEffect(selectedFilters) {
         sharedViewModel.searchVendors()
     }
 
@@ -343,6 +345,12 @@ fun SearchResultsScreen(
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator()
+                        } else if (errorMessage != null) {
+                            Text(
+                                "Error: $errorMessage",
+                                textAlign = TextAlign.Center,
+                                color = Color.Red
+                            )
                         } else {
                             Text(
                                 "No vendors match the selected preferences.",
@@ -400,11 +408,11 @@ fun SearchResultsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    CompactFilterButton("Delivery", "Delivery" in selectedFilters) { toggleFilter("Delivery") }
-                    CompactFilterButton("Open", "Open" in selectedFilters) { toggleFilter("Open") }
-                    CompactFilterButton("USA", "USA" in selectedFilters) { toggleFilter("USA") } // TODO: Replace with icon
-                    CompactFilterButton("Europe", "Europe" in selectedFilters) { toggleFilter("Europe") } // TODO: Replace with icon
-                    CompactFilterButton("N Afr/ME", "N Afr/ME" in selectedFilters) { toggleFilter("N Afr/ME") } // TODO: Replace with icon
+                    CompactFilterButton("Delivery", "delivery" in selectedFilters) { toggleFilter("delivery") }
+                    CompactFilterButton("Open", "open" in selectedFilters) { toggleFilter("open") }
+                    CompactFilterButton("USA", "usa" in selectedFilters) { toggleFilter("usa") } // TODO: Replace with icon
+                    CompactFilterButton("Europe", "europe" in selectedFilters) { toggleFilter("europe") } // TODO: Replace with icon
+                    CompactFilterButton("N Afr/ME", "north_africa_middle_east" in selectedFilters) { toggleFilter("north_africa_middle_east") } // TODO: Replace with icon
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -414,11 +422,11 @@ fun SearchResultsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    CompactFilterButton("Takeout", "Takeout" in selectedFilters) { toggleFilter("Takeout") }
-                    CompactFilterButton("Fusion", "Fusion" in selectedFilters) { toggleFilter("Fusion") }
-                    CompactFilterButton("Mex & SA", "Mex & SA" in selectedFilters) { toggleFilter("Mex & SA") } // TODO: Replace with icon
-                    CompactFilterButton("Sub Sah", "Sub Sah" in selectedFilters) { toggleFilter("Sub Sah") } // TODO: Replace with icon
-                    CompactFilterButton("E Asia", "E Asia" in selectedFilters) { toggleFilter("E Asia") } // TODO: Replace with icon
+                    CompactFilterButton("Takeout", "takeout" in selectedFilters) { toggleFilter("takeout") }
+                    CompactFilterButton("Fusion", "fusion" in selectedFilters) { toggleFilter("fusion") }
+                    CompactFilterButton("Mex & SA", "mexico_south_america" in selectedFilters) { toggleFilter("mexico_south_america") } // TODO: Replace with icon
+                    CompactFilterButton("Sub Sah", "sub_saharan_africa" in selectedFilters) { toggleFilter("sub_saharan_africa") } // TODO: Replace with icon
+                    CompactFilterButton("E Asia", "east_asia" in selectedFilters) { toggleFilter("east_asia") } // TODO: Replace with icon
                 }
             }
         }

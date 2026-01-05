@@ -77,7 +77,9 @@ data class VendorSearchRequest(
     val sortDirection: String = "desc",
     val page: Int = 1,
     @SerializedName("page_size")
-    val pageSize: Int = 10
+    val pageSize: Int = 10,
+    @SerializedName("vendor_filters")
+    val vendorFilters: List<String> = emptyList()
 )
 
 // ===== Response Models =====

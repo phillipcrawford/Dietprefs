@@ -68,6 +68,10 @@ class SharedViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    // Restaurant-level filters (shared between users)
+    private val _vendorFilters = MutableStateFlow<Set<String>>(emptySet())
+    val vendorFilters: StateFlow<Set<String>> = _vendorFilters.asStateFlow()
+
     // Display text from backend (formatted filter descriptions)
     private val _user1Display = MutableStateFlow("")
     val user1Display: StateFlow<String> = _user1Display.asStateFlow()
@@ -244,6 +248,16 @@ class SharedViewModel(
         _searchQuery.value = query
     }
 
+    fun toggleVendorFilter(filterName: String) {
+        val currentFilters = _vendorFilters.value.toMutableSet()
+        if (filterName in currentFilters) {
+            currentFilters.remove(filterName)
+        } else {
+            currentFilters.add(filterName)
+        }
+        _vendorFilters.value = currentFilters
+    }
+
     /**
      * Clears all filters for both users.
      * This includes both categorical filters (preferences) and numeric filters (price).
@@ -260,6 +274,8 @@ class SharedViewModel(
         // Clear display text
         _user1Display.value = ""
         _user2Display.value = ""
+        // Clear vendor filters
+        _vendorFilters.value = emptySet()
     }
 
     fun updateSortState(column: SortColumn) {
@@ -357,7 +373,8 @@ class SharedViewModel(
                     sortBy = sortBy,
                     sortDirection = sortDirection,
                     page = currentPage,
-                    pageSize = pageSize
+                    pageSize = pageSize,
+                    vendorFilters = _vendorFilters.value.toList()
                 )
 
                 result.onSuccess { response ->
@@ -421,7 +438,8 @@ class SharedViewModel(
                     sortBy = sortBy,
                     sortDirection = sortDirection,
                     page = currentPage,
-                    pageSize = pageSize
+                    pageSize = pageSize,
+                    vendorFilters = _vendorFilters.value.toList()
                 )
 
                 result.onSuccess { response ->
