@@ -34,6 +34,7 @@ import com.example.dietprefs.model.SortDirection
 import com.example.dietprefs.ui.navigation.Screen
 import com.example.dietprefs.ui.theme.backgroundGrey
 import com.example.dietprefs.ui.theme.dietprefsGrey
+import com.example.dietprefs.ui.theme.selectedGrey
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
 import com.example.dietprefs.ui.components.FilterButton
@@ -65,6 +66,18 @@ fun SearchResultsScreen(
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+
+    // Track selected filters (local state for now)
+    var selectedFilters by remember { mutableStateOf(setOf<String>()) }
+
+    // Helper function to toggle filter selection
+    fun toggleFilter(filterName: String) {
+        selectedFilters = if (filterName in selectedFilters) {
+            selectedFilters - filterName
+        } else {
+            selectedFilters + filterName
+        }
+    }
 
     // Determine user mode for results display
     val isTwoUserMode = user1Prefs.isNotEmpty() && user2Prefs.isNotEmpty()
@@ -387,11 +400,11 @@ fun SearchResultsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    CompactFilterButton(label = "Delivery", onClick = { /* TODO */ })
-                    CompactFilterButton(label = "Open", onClick = { /* TODO */ })
-                    CompactFilterButton(label = "USA", onClick = { /* TODO */ }) // TODO: Replace with icon
-                    CompactFilterButton(label = "Europe", onClick = { /* TODO */ }) // TODO: Replace with icon
-                    CompactFilterButton(label = "N Afr/ME", onClick = { /* TODO */ }) // TODO: Replace with icon
+                    CompactFilterButton("Delivery", "Delivery" in selectedFilters) { toggleFilter("Delivery") }
+                    CompactFilterButton("Open", "Open" in selectedFilters) { toggleFilter("Open") }
+                    CompactFilterButton("USA", "USA" in selectedFilters) { toggleFilter("USA") } // TODO: Replace with icon
+                    CompactFilterButton("Europe", "Europe" in selectedFilters) { toggleFilter("Europe") } // TODO: Replace with icon
+                    CompactFilterButton("N Afr/ME", "N Afr/ME" in selectedFilters) { toggleFilter("N Afr/ME") } // TODO: Replace with icon
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -401,11 +414,11 @@ fun SearchResultsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    CompactFilterButton(label = "Takeout", onClick = { /* TODO */ })
-                    CompactFilterButton(label = "Fusion", onClick = { /* TODO */ })
-                    CompactFilterButton(label = "Mex & SA", onClick = { /* TODO */ }) // TODO: Replace with icon
-                    CompactFilterButton(label = "Sub Sah", onClick = { /* TODO */ }) // TODO: Replace with icon
-                    CompactFilterButton(label = "E Asia", onClick = { /* TODO */ }) // TODO: Replace with icon
+                    CompactFilterButton("Takeout", "Takeout" in selectedFilters) { toggleFilter("Takeout") }
+                    CompactFilterButton("Fusion", "Fusion" in selectedFilters) { toggleFilter("Fusion") }
+                    CompactFilterButton("Mex & SA", "Mex & SA" in selectedFilters) { toggleFilter("Mex & SA") } // TODO: Replace with icon
+                    CompactFilterButton("Sub Sah", "Sub Sah" in selectedFilters) { toggleFilter("Sub Sah") } // TODO: Replace with icon
+                    CompactFilterButton("E Asia", "E Asia" in selectedFilters) { toggleFilter("E Asia") } // TODO: Replace with icon
                 }
             }
         }
@@ -419,6 +432,7 @@ fun SearchResultsScreen(
 @Composable
 private fun CompactFilterButton(
     label: String,
+    isSelected: Boolean,
     onClick: () -> Unit
 ) {
     OutlinedButton(
@@ -428,7 +442,8 @@ private fun CompactFilterButton(
         border = androidx.compose.foundation.BorderStroke(2.dp, backgroundGrey),
         shape = RoundedCornerShape(4.dp),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color.White
+            contentColor = Color.White,
+            containerColor = if (isSelected) selectedGrey else Color.Transparent
         )
     ) {
         Text(
