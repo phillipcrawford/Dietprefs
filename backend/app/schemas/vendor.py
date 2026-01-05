@@ -99,6 +99,10 @@ class VendorSearchRequest(BaseModel):
     sort_direction: str = Field("desc", description="Sort direction: asc or desc")
     page: int = Field(1, ge=1, description="Page number (starts at 1)")
     page_size: int = Field(10, ge=1, le=100, description="Results per page")
+    vendor_filters: List[str] = Field(
+        default_factory=list,
+        description="Restaurant-level filters: delivery, takeout, open, fusion, usa, europe, north_africa_middle_east, mexico_south_america, sub_saharan_africa, east_asia"
+    )
 
 
 class PaginationMeta(BaseModel):

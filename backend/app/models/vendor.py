@@ -42,6 +42,15 @@ class Vendor(Base):
     # Special attributes
     custom_by_nature = Column(Boolean, default=False)
 
+    # Cuisine type filters (multiple cuisines allowed per restaurant)
+    cuisine_usa = Column(Boolean, default=False)
+    cuisine_europe = Column(Boolean, default=False)
+    cuisine_north_africa_middle_east = Column(Boolean, default=False)
+    cuisine_mexico_south_america = Column(Boolean, default=False)
+    cuisine_sub_saharan_africa = Column(Boolean, default=False)
+    cuisine_east_asia = Column(Boolean, default=False)
+    fusion = Column(Boolean, default=False)  # Manual flag for hard-to-categorize
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

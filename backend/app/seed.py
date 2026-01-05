@@ -304,22 +304,14 @@ STREETS = [
 
 def seed_database():
     """Seed the database with realistic restaurant data."""
-    print("Creating database tables...")
+    print("Dropping existing tables...")
+    Base.metadata.drop_all(bind=engine)
+    print("Creating database tables with new schema...")
     Base.metadata.create_all(bind=engine)
 
     db = SessionLocal()
 
     try:
-        # Check if database is already seeded
-        existing_vendors = db.query(Vendor).count()
-        if existing_vendors > 0:
-            print(f"Database already has {existing_vendors} vendors.")
-            print("FORCE RESEED: Deleting existing data...")
-            db.query(Item).delete()
-            db.query(Vendor).delete()
-            db.commit()
-            print("Existing data cleared. Proceeding with fresh seed...")
-
         print("Seeding database with realistic restaurant data...")
 
         # Bozeman, MT location: (45.6770, -111.0429)
@@ -337,6 +329,34 @@ def seed_database():
             angle = random.uniform(0, 2 * math.pi)
             lat_offset = distance_factor * random.choice([-1, 1]) * abs(math.cos(angle))
             lng_offset = distance_factor * random.choice([-1, 1]) * abs(math.sin(angle))
+
+            # Classify cuisine type for filter flags
+            cuisine_type = restaurant.get("cuisine", "")
+            cuisine_usa = False
+            cuisine_europe = False
+            cuisine_north_africa_middle_east = False
+            cuisine_mexico_south_america = False
+            cuisine_sub_saharan_africa = False
+            cuisine_east_asia = False
+            fusion_flag = False
+
+            if cuisine_type in ["American Breakfast", "American BBQ", "Smoothies/Juice", "Southern/Soul Food", "Seafood"]:
+                cuisine_usa = True
+            elif cuisine_type in ["Italian", "French Cafe"]:
+                cuisine_europe = True
+            elif cuisine_type in ["Mediterranean", "Indian"]:
+                cuisine_north_africa_middle_east = True
+            elif cuisine_type in ["Mexican", "Mexican Street Food"]:
+                cuisine_mexico_south_america = True
+            elif cuisine_type in ["Japanese", "Chinese", "Vietnamese", "Thai", "Hawaiian Poke"]:
+                cuisine_east_asia = True
+            elif cuisine_type in ["Vegan", "Farm Fresh", "Keto/Low-Carb", "Jewish Deli"]:
+                fusion_flag = True
+                # Some fusion restaurants also have a primary cuisine
+                if cuisine_type in ["Southern/Soul Food", "Seafood"]:
+                    cuisine_usa = True
+                elif cuisine_type == "Jewish Deli":
+                    cuisine_europe = True
 
             # Create vendor
             vendor = Vendor(
@@ -359,7 +379,14 @@ def seed_database():
                 postmates=random.choice([True, False]),
                 yelp=True,
                 google_reviews=True,
-                tripadvisor=random.choice([True, False])
+                tripadvisor=random.choice([True, False]),
+                cuisine_usa=cuisine_usa,
+                cuisine_europe=cuisine_europe,
+                cuisine_north_africa_middle_east=cuisine_north_africa_middle_east,
+                cuisine_mexico_south_america=cuisine_mexico_south_america,
+                cuisine_sub_saharan_africa=cuisine_sub_saharan_africa,
+                cuisine_east_asia=cuisine_east_asia,
+                fusion=fusion_flag
             )
 
             db.add(vendor)
