@@ -1,5 +1,6 @@
 package com.example.dietprefs.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.dietprefs.ui.theme.dietprefsGrey
 
 /**
  * Search bar component for filtering vendors by name.
@@ -26,6 +28,7 @@ fun VendorSearchBar(
         placeholder = { Text("Search vendors...") },
         modifier = modifier
             .fillMaxWidth()
+            .background(dietprefsGrey)
             .padding(horizontal = 4.dp, vertical = 4.dp),
         shape = RoundedCornerShape(8.dp),
         colors = TextFieldDefaults.colors(
