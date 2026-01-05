@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -424,7 +425,8 @@ private fun CompactFilterButton(
         onClick = onClick,
         modifier = Modifier.size(width = 64.dp, height = 40.dp),
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
-        border = androidx.compose.foundation.BorderStroke(2.dp, backgroundGrey)
+        border = androidx.compose.foundation.BorderStroke(2.dp, backgroundGrey),
+        shape = RoundedCornerShape(4.dp)
     ) {
         Text(
             text = label,
