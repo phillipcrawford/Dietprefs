@@ -426,7 +426,10 @@ private fun CompactFilterButton(
         modifier = Modifier.size(width = 64.dp, height = 40.dp),
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
         border = androidx.compose.foundation.BorderStroke(2.dp, backgroundGrey),
-        shape = RoundedCornerShape(4.dp)
+        shape = RoundedCornerShape(4.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = Color.White
+        )
     ) {
         Text(
             text = label,
