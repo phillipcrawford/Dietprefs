@@ -10,7 +10,7 @@ from app.services.filter_service import FilterService
 
 
 class VendorService:
-    """Business logic for vendor search and filtering."""
+    """Business logic for vendor search and filtering. """
 
     @staticmethod
     def search_vendors(
@@ -39,6 +39,44 @@ class VendorService:
                 Vendor.lat.between(request.lat - lat_delta, request.lat + lat_delta),
                 Vendor.lng.between(request.lng - lng_delta, request.lng + lng_delta)
             )
+
+        # Apply vendor-level filters (after distance, before item join)
+        if request.vendor_filters:
+            filter_conditions = []
+
+            for filter_name in request.vendor_filters:
+                filter_lower = filter_name.lower().strip()
+
+                if filter_lower == "delivery":
+                    filter_conditions.append(Vendor.delivery == True)
+                elif filter_lower == "takeout":
+                    filter_conditions.append(Vendor.takeout == True)
+                elif filter_lower == "fusion":
+                    filter_conditions.append(Vendor.fusion == True)
+                elif filter_lower == "usa":
+                    filter_conditions.append(Vendor.cuisine_usa == True)
+                elif filter_lower == "europe":
+                    filter_conditions.append(Vendor.cuisine_europe == True)
+                elif filter_lower == "north_africa_middle_east":
+                    filter_conditions.append(Vendor.cuisine_north_africa_middle_east == True)
+                elif filter_lower == "mexico_south_america":
+                    filter_conditions.append(Vendor.cuisine_mexico_south_america == True)
+                elif filter_lower == "sub_saharan_africa":
+                    filter_conditions.append(Vendor.cuisine_sub_saharan_africa == True)
+                elif filter_lower == "east_asia":
+                    filter_conditions.append(Vendor.cuisine_east_asia == True)
+                elif filter_lower == "open":
+                    # Special case: filter by "open now" status
+                    # Note: This requires fetching vendors first, then filtering
+                    # We'll handle this after the query executes
+                    pass
+
+            # Apply all vendor filters with AND logic
+            if filter_conditions:
+                query = query.filter(*filter_conditions)
+
+        # Store if "open" filter was requested (handle after query)
+        has_open_filter = "open" in [f.lower().strip() for f in request.vendor_filters] if request.vendor_filters else False
 
         # Check if price filters or preferences are active
         user1_has_price = request.user1_max_price is not None
@@ -90,6 +128,11 @@ class VendorService:
 
         # Execute query to get vendors (with items eagerly loaded)
         vendors = query.all()
+
+        # Apply "open" filter if requested (post-query filtering)
+        if has_open_filter:
+            open_vendor_ids = VendorService.filter_open_vendors(vendors)
+            vendors = [v for v in vendors if v.id in open_vendor_ids]
 
         processed_vendors = []
 
@@ -261,3 +304,38 @@ class VendorService:
                 filtered_items.append(item)
 
         return filtered_items
+
+    @staticmethod
+    def filter_open_vendors(vendors: List[Vendor]) -> List[int]:
+        """
+        Filter vendors that are currently open based on hours JSON field.
+
+        Hours format: {"monday": "11:00-22:00", "tuesday": "11:00-22:00", ...}
+        Returns list of vendor IDs that are currently open.
+        """
+        from datetime import datetime
+        import json
+
+        # Get current time in server timezone
+        now = datetime.now()
+        current_day = now.strftime("%A").lower()  # "monday", "tuesday", etc.
+        current_time = now.strftime("%H:%M")  # "14:30"
+
+        open_vendor_ids = []
+
+        for vendor in vendors:
+            if vendor.hours:
+                try:
+                    hours_dict = json.loads(vendor.hours)
+                    today_hours = hours_dict.get(current_day)
+
+                    if today_hours and today_hours != "closed":
+                        # Parse "11:00-22:00" format
+                        open_time, close_time = today_hours.split("-")
+                        if open_time <= current_time <= close_time:
+                            open_vendor_ids.append(vendor.id)
+                except (json.JSONDecodeError, ValueError, AttributeError):
+                    # Skip vendors with invalid hours format
+                    continue
+
+        return open_vendor_ids
