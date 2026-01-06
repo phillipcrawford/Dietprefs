@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +36,7 @@ import com.example.dietprefs.ui.navigation.Screen
 import com.example.dietprefs.ui.theme.backgroundGrey
 import com.example.dietprefs.ui.theme.dietprefsGrey
 import com.example.dietprefs.ui.theme.selectedGrey
+import com.example.dietprefs.ui.theme.selectedTeal
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
 import com.example.dietprefs.ui.components.FilterButton
@@ -445,13 +447,18 @@ private fun CompactFilterButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = Modifier.size(width = 64.dp, height = 40.dp),
+        modifier = Modifier
+            .size(width = 64.dp, height = 40.dp)
+            .shadow(4.dp, RoundedCornerShape(4.dp)),
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
-        border = androidx.compose.foundation.BorderStroke(2.dp, backgroundGrey),
+        border = androidx.compose.foundation.BorderStroke(
+            3.dp,
+            if (isSelected) selectedTeal else Color.White.copy(alpha = 0.3f)
+        ),
         shape = RoundedCornerShape(4.dp),
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = Color.White,
-            containerColor = if (isSelected) selectedGrey else Color.Transparent
+            containerColor = if (isSelected) selectedTeal.copy(alpha = 0.3f) else backgroundGrey
         )
     ) {
         Text(
