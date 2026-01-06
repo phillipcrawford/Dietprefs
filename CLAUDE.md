@@ -237,6 +237,126 @@ LazyColumn(
 
 ---
 
+### Vendor-Level Filters Implementation (Completed)
+**Goal**: Make filter buttons functional by implementing server-side vendor filtering with client-server architecture.
+
+**Filter Types**:
+1. **Service Options** (2 filters):
+   - `delivery`: Vendor offers delivery service
+   - `takeout`: Vendor offers takeout service
+
+2. **Geographic Regions** (6 filters):
+   - `usa`: American cuisine
+   - `europe`: European cuisine
+   - `north_africa_middle_east`: Mediterranean/Middle Eastern/Indian cuisine
+   - `mexico_south_america`: Mexican and South American cuisine
+   - `sub_saharan_africa`: Sub-Saharan African cuisine
+   - `east_asia`: Japanese, Chinese, Thai, Vietnamese, Korean cuisine
+
+3. **Special Categories** (2 filters):
+   - `fusion`: Hard-to-categorize fusion restaurants (manual flag)
+   - `open`: Currently open based on operating hours (time-based calculation)
+
+**Filter Logic**: AND operation - restaurant must match ALL selected filters
+
+**Backend Changes**:
+
+1. **Database Schema** (`backend/app/models/vendor.py`):
+   - Added 7 boolean columns to Vendor model:
+     - `cuisine_usa`, `cuisine_europe`, `cuisine_north_africa_middle_east`
+     - `cuisine_mexico_south_america`, `cuisine_sub_saharan_africa`, `cuisine_east_asia`
+     - `fusion` (manual catch-all flag)
+   - Note: `delivery` and `takeout` columns already existed
+
+2. **API Schema** (`backend/app/schemas/vendor.py:101`):
+   - Added `vendor_filters: List[str]` to VendorSearchRequest
+   - Accepts filter names as lowercase snake_case strings
+
+3. **Filter Service** (`backend/app/services/vendor_service.py:44-84`):
+   - Applies vendor-level filters with AND logic using SQLAlchemy:
+     ```python
+     if request.vendor_filters:
+         filter_conditions = []
+         for filter_name in request.vendor_filters:
+             if filter_lower == "delivery":
+                 filter_conditions.append(Vendor.delivery == True)
+             # ... (9 more filters)
+
+         if filter_conditions:
+             query = query.filter(*filter_conditions)  # AND logic
+     ```
+   - Special "Open" filter implementation:
+     - Parses `hours` JSON field for each vendor
+     - Compares current day/time against operating hours
+     - Filters post-query (not in SQL) due to complexity
+
+4. **Seed Data** (`backend/app/seed.py:342-370`):
+   - Added cuisine classification logic based on cuisine type:
+     ```python
+     if cuisine_type in ["American Breakfast", "American BBQ", ...]:
+         cuisine_usa = True
+     elif cuisine_type in ["Italian", "French Cafe"]:
+         cuisine_europe = True
+     # ... (more mappings)
+     ```
+   - Restaurants can have multiple cuisine flags (e.g., fusion restaurants)
+
+**Frontend Changes**:
+
+1. **API Models** (`ApiModels.kt:81-83`):
+   - Added `vendorFilters: List<String>` to VendorSearchRequest
+
+2. **ViewModel State** (`SharedViewModel.kt:71-83`):
+   - Added `_vendorFilters` MutableStateFlow for selected filters
+   - Added `toggleVendorFilter()` to add/remove filters from selection
+   - Updated `searchVendors()` to pass filters to API
+   - Updated `clearAllFilters()` to reset vendor filters
+
+3. **Repository** (`VendorRepository.kt:38`):
+   - Added `vendorFilters` parameter to `searchVendors()`
+   - Passes filters to API request
+
+4. **UI Integration** (`SearchResultsScreen.kt:71-98`):
+   - Observes `vendorFilters` StateFlow from ViewModel
+   - `LaunchedEffect(selectedFilters)` triggers search when filters change
+   - Filter buttons call `toggleVendorFilter()` on click
+   - Buttons show selected state with `selectedGrey` background
+
+**Architecture: Client-Server Filter Flow**:
+
+1. **Client-Side (UI State)**:
+   - User clicks filter button → `toggleVendorFilter()` updates StateFlow
+   - Button shows selected/unselected state immediately
+
+2. **Trigger Server Request**:
+   - `LaunchedEffect` detects state change → calls `searchVendors()`
+
+3. **Server-Side (Database Filtering)**:
+   - Android sends `vendorFilters` list to backend
+   - Backend applies filters directly in SQL query
+   - Database returns only matching vendors
+
+4. **Client Updates**:
+   - Response updates `pagedVendors` StateFlow
+   - UI displays filtered results
+
+**Why Server-Side Filtering?**:
+- **Efficient**: Database filters at source without downloading all vendors
+- **Combined logic**: Works with preferences, distance, search query, sorting
+- **Pagination**: Only fetches needed vendors (10 at a time)
+- **DRY**: Single source of truth for all clients (Android, iOS, Web)
+
+**Filter Naming Convention**:
+- Backend API: lowercase snake_case (`north_africa_middle_east`)
+- UI Display: Abbreviated text (`N Afr/ME`)
+- Future: Region filters will use icon images instead of text
+
+**Files Modified**:
+- Backend: `models/vendor.py`, `schemas/vendor.py`, `services/vendor_service.py`, `seed.py`
+- Frontend: `ApiModels.kt`, `VendorRepository.kt`, `SharedViewModel.kt`, `SearchResultsScreen.kt`
+
+---
+
 ## Architecture
 
 ### Multi-Client Design
@@ -256,20 +376,33 @@ The app is architected for **3 frontends (Android, iOS, Web) sharing 1 backend +
 - Local caching: For offline/performance (optional)
 
 ### Filter System
-The app supports two types of filters:
+The app supports three types of filters:
 
-1. **Categorical Filters (Preferences)**:
+1. **Item-Level Filters (Dietary Preferences)**:
    - Boolean dietary restrictions (vegetarian, gluten-free, etc.)
+   - Filters menu items, not vendors
    - Stored as `Set<Preference>` in Android, `List[str]` in backend
    - 33 total preferences (32 dietary + LOW_PRICE) in `Preference.kt`
    - Backend: 32 dietary preferences mapped in `FilterService.PREFERENCE_FIELD_MAP`
+   - User-specific: Each user can have different dietary preferences
 
 2. **Numeric Filters (Price)**:
    - Maximum price threshold per user
+   - Filters menu items by price
    - Stored as `Float?` in Android, `Optional[float]` in backend
    - Range: $5-$30 (configurable via `/api/v1/config`)
    - Frontend: LOW_PRICE in preference set synced with price value
    - Backend: Uses separate `user1_max_price` / `user2_max_price` parameters
+   - User-specific: Each user can have different price thresholds
+
+3. **Vendor-Level Filters** (NEW):
+   - Boolean vendor attributes (delivery, cuisine type, open status)
+   - Filters entire restaurants, not individual items
+   - Stored as `Set<String>` in Android, `List[str]` in backend
+   - 10 total filters: 2 service options + 6 geographic regions + 2 special categories
+   - Backend: Applied directly in vendor search SQL query
+   - Shared: All users see same vendor-level filter results
+   - AND logic: Restaurant must match ALL selected filters
 
 ### Key Services (Backend)
 
@@ -384,6 +517,9 @@ MAX_DISTANCE_MILES = 10.0
 - ✅ LOW_PRICE treated uniformly with other preferences
 - ✅ Backend display text formatting (DRY across clients)
 - ✅ Dynamic configuration from backend (`/api/v1/config`)
+- ✅ Vendor-level filters (10 filters: delivery, takeout, open, fusion, 6 cuisine regions)
+- ✅ Client-server filter architecture with server-side database filtering
+- ✅ Filter state management with reactive UI updates
 
 ## Multi-Client Readiness
 **Completed**:
