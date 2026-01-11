@@ -362,13 +362,13 @@ fun SearchResultsScreen(
                     ) {
                     itemsIndexed(
                         items = pagedVendors,
-                        key = { _, vendor -> vendor.vendorName + vendor.querySpecificRatingString } // More unique key
+                        key = { _, vendor -> "${vendor.name}_${vendor.rating.upvotes}_${vendor.rating.totalVotes}" } // Unique key
                     ) { index, vendor ->
                         VendorListItem(
                             vendor = vendor,
                             isTwoUserMode = isTwoUserMode,
                             onClick = {
-                                sharedViewModel.selectVendorByName(vendor.vendorName)
+                                sharedViewModel.selectVendorByName(vendor.name)
                                 navController.navigate(Screen.RestaurantDetail.route)
                             }
                         )
