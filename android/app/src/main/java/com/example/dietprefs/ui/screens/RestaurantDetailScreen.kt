@@ -33,6 +33,35 @@ import com.example.dietprefs.ui.theme.restaurantSelectedGold
 import com.example.dietprefs.ui.theme.restaurantDeselectedGold
 import com.example.dietprefs.viewmodel.SharedViewModel
 
+/**
+ * Dimension constants for RestaurantDetailScreen layout.
+ * These values create a fixed-height viewport that shows the restaurant header
+ * plus ~3 menu items at a time, with snap scrolling behavior.
+ */
+private object RestaurantDetailDimensions {
+    /** Menu item row height - matches SearchResultsScreen vendor height */
+    val MENU_ITEM_HEIGHT = 48.dp
+
+    /** Restaurant header height (1.25x standard item height) */
+    val RESTAURANT_HEADER_HEIGHT = 60.dp
+
+    /** Photo carousel height for menu item images */
+    val PHOTO_CAROUSEL_HEIGHT = 300.dp
+
+    /**
+     * Viewport height: shows restaurant header + 3 menu items at once
+     * Calculation: 60dp (header) + 48dp * 3 (items) = 204dp
+     */
+    val VIEWPORT_HEIGHT = 204.dp
+
+    /**
+     * Bottom padding to allow all items to scroll to top position.
+     * Calculation: 204dp (viewport) - 48dp (item height) = 156dp
+     * This ensures firstVisibleItemIndex can increment through all items.
+     */
+    val BOTTOM_PADDING = 156.dp
+}
+
 @Composable
 fun RestaurantDetailScreen(
     navController: NavController,
@@ -112,10 +141,10 @@ fun RestaurantDetailScreen(
                         state = listState,
                         flingBehavior = snapFlingBehavior,
                         userScrollEnabled = true,
-                        contentPadding = PaddingValues(bottom = 156.dp), // Allow all items to scroll to top
+                        contentPadding = PaddingValues(bottom = RestaurantDetailDimensions.BOTTOM_PADDING),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(204.dp) // 60dp header + 48dp * 3 items = 204dp
+                            .height(RestaurantDetailDimensions.VIEWPORT_HEIGHT)
                     ) {
                         // Item 0: Restaurant header
                         item {
@@ -156,7 +185,7 @@ fun RestaurantDetailScreen(
                                     photos = item.pictures?.split(",")?.map { it.trim() } ?: emptyList(),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(300.dp)
+                                        .height(RestaurantDetailDimensions.PHOTO_CAROUSEL_HEIGHT)
                                 )
 
                                 VotingUI(
@@ -191,7 +220,7 @@ fun RestaurantHeaderItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp) // 1.25x of 48dp
+            .height(RestaurantDetailDimensions.RESTAURANT_HEADER_HEIGHT)
             .background(backgroundColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.CenterStart
@@ -222,7 +251,7 @@ fun MenuItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp) // Match SearchResultsScreen vendor height
+            .height(RestaurantDetailDimensions.MENU_ITEM_HEIGHT)
             .background(backgroundColor)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp),
