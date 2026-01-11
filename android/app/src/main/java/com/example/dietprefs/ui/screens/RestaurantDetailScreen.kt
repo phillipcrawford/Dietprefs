@@ -83,6 +83,7 @@ fun RestaurantDetailScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(backgroundGrey)
+                .padding(top = 4.dp)
         ) {
             when {
                 selectedVendor == null -> {

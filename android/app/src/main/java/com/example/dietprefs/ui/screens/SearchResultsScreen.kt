@@ -137,13 +137,8 @@ fun SearchResultsScreen(
                 .fillMaxSize()
                 .background(backgroundGrey)
                 .padding(innerPadding)
+                .padding(top = 4.dp)
         ) {
-            // Visual separator between top bar and table header
-            HorizontalDivider(
-                thickness = 4.dp,
-                color = backgroundGrey
-            )
-            
             // --- Sortable Table Header ---
             if (isTwoUserMode) {
                 // Two-user mode: Two rows with explicit alignment
