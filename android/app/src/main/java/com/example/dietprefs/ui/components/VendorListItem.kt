@@ -22,16 +22,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.dietprefs.network.models.VendorResponse
 import com.example.dietprefs.ui.theme.dietprefsGrey
 import com.example.dietprefs.ui.theme.upvoteGreen
-import com.example.dietprefs.viewmodel.DisplayVendor
 
 /**
  * List item component for displaying vendor information in search results.
  */
 @Composable
 fun VendorListItem(
-    vendor: DisplayVendor,
+    vendor: VendorResponse,
     isTwoUserMode: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -50,7 +50,7 @@ fun VendorListItem(
                 .fillMaxHeight()
                 .drawBehind {
                     // Calculate the split point based on rating ratio
-                    val ratingRatio = vendor.querySpecificRatingValue.coerceIn(0f, 1f)
+                    val ratingRatio = vendor.rating.percentage.coerceIn(0f, 1f)
                     val greenWidth = size.width * ratingRatio
 
                     // Draw green section (upvotes)
@@ -70,7 +70,7 @@ fun VendorListItem(
         ) {
             // Vendor Name - Aligned to TopStart
             Text(
-                text = vendor.vendorName,
+                text = vendor.name,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = Color.White,
@@ -81,7 +81,7 @@ fun VendorListItem(
 
             // Rating String - Aligned to TopEnd
             Text(
-                text = vendor.querySpecificRatingString,
+                text = "${vendor.rating.upvotes}/${vendor.rating.totalVotes}",
                 fontSize = 11.sp,
                 color = Color.White,
                 modifier = Modifier
@@ -99,7 +99,7 @@ fun VendorListItem(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                String.format("%.1f mi", vendor.distanceMiles),
+                String.format("%.1f mi", vendor.distanceMiles ?: 0.0),
                 fontSize = 14.sp,
                 color = Color.White
             )
@@ -116,14 +116,14 @@ fun VendorListItem(
         ) {
             if (isTwoUserMode) {
                 Text(
-                    text = "${vendor.user1Count} | ${vendor.user2Count}",
+                    text = "${vendor.itemCounts.user1Matches} | ${vendor.itemCounts.user2Matches}",
                     fontSize = 14.sp,
                     color = Color.White,
                     textAlign = TextAlign.Center
                 )
             } else {
                 Text(
-                    text = "${vendor.combinedRelevantItemCount}",
+                    text = "${vendor.itemCounts.totalRelevant}",
                     fontSize = 14.sp,
                     color = Color.White,
                     textAlign = TextAlign.Center

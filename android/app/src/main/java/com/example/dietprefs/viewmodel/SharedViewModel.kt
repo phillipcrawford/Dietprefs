@@ -19,10 +19,12 @@ import com.example.dietprefs.network.models.LocationConfig
 import com.example.dietprefs.network.models.SortingConfig
 import com.example.dietprefs.network.models.VendorSearchRequest
 import com.example.dietprefs.repository.VendorRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * SharedViewModel manages the application state and business logic.
@@ -43,8 +45,9 @@ import kotlinx.coroutines.launch
  * Both filter types are combined when calling the API via searchVendors().
  * The separation reflects their different data types and interaction patterns.
  */
-class SharedViewModel(
-    private val repository: VendorRepository = VendorRepository()
+@HiltViewModel
+class SharedViewModel @Inject constructor(
+    private val repository: VendorRepository
 ) : ViewModel() {
 
     // App configuration from backend
@@ -81,8 +84,8 @@ class SharedViewModel(
     val user2Display: StateFlow<String> = _user2Display.asStateFlow()
 
     // Vendor results state
-    private val _pagedVendors = MutableStateFlow<List<DisplayVendor>>(emptyList())
-    val pagedVendors: StateFlow<List<DisplayVendor>> = _pagedVendors.asStateFlow()
+    private val _pagedVendors = MutableStateFlow<List<VendorResponse>>(emptyList())
+    val pagedVendors: StateFlow<List<VendorResponse>> = _pagedVendors.asStateFlow()
 
     private val _totalResultsCount = MutableStateFlow(0)
     val totalResultsCount: StateFlow<Int> = _totalResultsCount.asStateFlow()
@@ -91,10 +94,7 @@ class SharedViewModel(
     val visibleRange: StateFlow<Pair<Int, Int>> = _visibleRange.asStateFlow()
 
     // Caching for local sort operations - stores all fetched vendors
-    private var cachedAllVendors = listOf<DisplayVendor>()
-
-    // Cache full VendorResponse objects for navigation
-    private var cachedVendorResponses = listOf<VendorResponse>()
+    private var cachedAllVendors = listOf<VendorResponse>()
 
     // Pagination state
     private var currentPage = 1  // API uses 1-based indexing
@@ -219,7 +219,7 @@ class SharedViewModel(
     }
 
     fun selectVendorByName(vendorName: String) {
-        val vendor = cachedVendorResponses.find { it.name == vendorName }
+        val vendor = cachedAllVendors.find { it.name == vendorName }
         _selectedVendor.value = vendor
     }
 
@@ -343,23 +343,23 @@ class SharedViewModel(
             val sortedVendors = when (_sortState.value.column) {
                 SortColumn.VENDOR_RATING -> {
                     if (_sortState.value.direction == SortDirection.ASCENDING) {
-                        vendorsToSort.sortedBy { it.querySpecificRatingValue }
+                        vendorsToSort.sortedBy { it.rating.percentage }
                     } else {
-                        vendorsToSort.sortedByDescending { it.querySpecificRatingValue }
+                        vendorsToSort.sortedByDescending { it.rating.percentage }
                     }
                 }
                 SortColumn.DISTANCE -> {
                     if (_sortState.value.direction == SortDirection.ASCENDING) {
-                        vendorsToSort.sortedBy { it.distanceMiles }
+                        vendorsToSort.sortedBy { it.distanceMiles ?: Double.MAX_VALUE }
                     } else {
-                        vendorsToSort.sortedByDescending { it.distanceMiles }
+                        vendorsToSort.sortedByDescending { it.distanceMiles ?: Double.MIN_VALUE }
                     }
                 }
                 SortColumn.MENU_ITEMS -> {
                     if (_sortState.value.direction == SortDirection.ASCENDING) {
-                        vendorsToSort.sortedBy { it.combinedRelevantItemCount }
+                        vendorsToSort.sortedBy { it.itemCounts.totalRelevant }
                     } else {
-                        vendorsToSort.sortedByDescending { it.combinedRelevantItemCount }
+                        vendorsToSort.sortedByDescending { it.itemCounts.totalRelevant }
                     }
                 }
             }
@@ -393,19 +393,14 @@ class SharedViewModel(
                     _user1Display.value = response.user1Display
                     _user2Display.value = response.user2Display
 
-                    // Cache full vendor responses
-                    cachedVendorResponses = response.vendors
-
-                    // Convert API response to DisplayVendor and cache them
-                    val displayVendors = response.vendors.map { it.toDisplayVendor() }
-                    cachedAllVendors = displayVendors
-                    _pagedVendors.value = displayVendors
+                    // Cache vendor responses directly
+                    cachedAllVendors = response.vendors
+                    _pagedVendors.value = response.vendors
                 }.onFailure { exception ->
                     _errorMessage.value = exception.message ?: "Unknown error occurred"
                     _pagedVendors.value = emptyList()
                     _totalResultsCount.value = 0
                     cachedAllVendors = emptyList()
-                    cachedVendorResponses = emptyList()
                 }
             } finally {
                 _isLoading.value = false
@@ -435,13 +430,9 @@ class SharedViewModel(
                 val result = repository.searchVendors(buildSearchRequest(page = currentPage))
 
                 result.onSuccess { response ->
-                    // Append new vendor responses to cache
-                    cachedVendorResponses = cachedVendorResponses + response.vendors
-
                     // Append new vendors to cache and displayed list
-                    val newVendors = response.vendors.map { it.toDisplayVendor() }
-                    cachedAllVendors = cachedAllVendors + newVendors
-                    _pagedVendors.value = _pagedVendors.value + newVendors
+                    cachedAllVendors = cachedAllVendors + response.vendors
+                    _pagedVendors.value = _pagedVendors.value + response.vendors
                 }.onFailure { exception ->
                     _errorMessage.value = exception.message ?: "Error loading next page"
                     currentPage-- // Revert page increment on failure
@@ -475,18 +466,6 @@ class SharedViewModel(
 
         _userLocation.value = location
         return location
-    }
-
-    private fun VendorResponse.toDisplayVendor(): DisplayVendor {
-        return DisplayVendor(
-            vendorName = this.name,
-            user1Count = this.itemCounts.user1Matches,
-            user2Count = this.itemCounts.user2Matches,
-            distanceMiles = this.distanceMiles ?: 0.0,
-            querySpecificRatingString = "${this.rating.upvotes}/${this.rating.totalVotes}",
-            querySpecificRatingValue = this.rating.percentage,
-            combinedRelevantItemCount = this.itemCounts.totalRelevant
-        )
     }
 
     fun fetchMenuItems(vendorId: Int) {
