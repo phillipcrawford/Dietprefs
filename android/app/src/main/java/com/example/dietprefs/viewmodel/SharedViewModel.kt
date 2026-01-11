@@ -148,8 +148,10 @@ class SharedViewModel(
             repository.getConfig().onSuccess { config ->
                 _appConfig.value = config
             }.onFailure { error ->
-                // Log error but don't block app - fall back to hardcoded Constants
+                // Set error message for consistency (even though config failure isn't critical)
+                _errorMessage.value = error.message ?: "Failed to fetch configuration"
                 android.util.Log.e("SharedViewModel", "Failed to fetch config", error)
+                // App continues with hardcoded Constants as fallback
             }
         }
     }

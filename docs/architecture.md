@@ -246,7 +246,7 @@ for item in vendor.items:
 
 **Current Seed** (`backend/app/seed.py`):
 - 20 vendors total
-- 15 within 10 miles of SF (37.7749, -122.4194)
+- 15 within 10 miles of Bozeman, MT (45.6770, -111.0429)
 - 5 beyond 10 miles (filtered out by distance)
 - 7 items per vendor = 140 total items
 - Most items have vegetarian flag (test data bias)
@@ -255,4 +255,4 @@ for item in vendor.items:
 
 ---
 
-**Last Updated**: 2025-10-02
+**Last Updated**: 2026-01-10

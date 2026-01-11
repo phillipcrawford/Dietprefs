@@ -8,6 +8,48 @@ Dietprefs is a restaurant discovery app that helps users find restaurants matchi
 
 ## Recent Major Refactoring (Completed)
 
+### Code Quality Improvements (January 2026)
+**Goal**: Eliminate duplication, improve maintainability, and follow DRY principles throughout the codebase.
+
+**Backend Changes**:
+1. **Refactored VendorService** (`backend/app/services/vendor_service.py`):
+   - Broke down 237-line `search_vendors()` method into 15 focused methods
+   - Methods: `_fetch_filtered_vendors()`, `_apply_distance_filter()`, `_apply_vendor_filters()`, `_apply_search_and_preference_filters()`, `_process_vendors()`, `_process_single_vendor()`, `_filter_vendor_items()`, `_meets_dual_user_criteria()`, `_get_relevant_items()`, `_calculate_rating()`, `_calculate_distance()`, `_build_vendor_response()`, `_sort_vendors()`, `_paginate_results()`
+   - **Result**: Each method has single responsibility, much easier to test and understand
+
+2. **Added Input Validation** (`backend/app/schemas/vendor.py`):
+   - Created `SortBy` and `SortDirection` enums for type-safe sorting
+   - Pydantic now validates and rejects invalid sort parameters with 422 errors
+   - Swagger UI shows dropdown with valid options
+
+**Frontend Changes**:
+1. **Extracted Constants** (`android/app/src/main/java/com/example/dietprefs/ui/screens/RestaurantDetailScreen.kt`):
+   - Created `RestaurantDetailDimensions` object with named constants
+   - Replaced magic numbers: `MENU_ITEM_HEIGHT`, `RESTAURANT_HEADER_HEIGHT`, `PHOTO_CAROUSEL_HEIGHT`, `VIEWPORT_HEIGHT`, `BOTTOM_PADDING`
+   - Added documentation explaining calculations
+
+2. **Eliminated Duplication** (`android/app/src/main/java/com/example/dietprefs/viewmodel/SharedViewModel.kt`):
+   - Created `buildSearchRequest(page: Int)` helper method
+   - Eliminated 26 lines of duplication between `searchVendors()` and `loadNextPage()`
+   - Updated `VendorRepository.searchVendors()` to accept request object directly
+
+3. **Consistent Error Handling**:
+   - Updated `fetchConfig()` to set `_errorMessage` like all other ViewModel methods
+   - All API failures now consistently stored in state (ready for UI display)
+
+4. **Standardized Spacing**:
+   - All three screens now use `.padding(top = 4.dp)` for spacing after TopBar
+   - Replaced `HorizontalDivider` approach with consistent padding
+   - RestaurantDetailScreen now has same 4dp spacing as other screens
+
+**Benefits**:
+- **Maintainability**: Code is significantly easier to read and modify
+- **Testability**: Small, focused methods can be unit tested independently
+- **Consistency**: Uniform error handling and spacing across all screens
+- **DRY Compliance**: Single source of truth for request building and layout constants
+
+---
+
 ### Multi-Client Architecture: Config Endpoint (NEW)
 **Goal**: Move business rules from clients to backend for DRY compliance across future iOS and Web apps.
 
@@ -90,7 +132,7 @@ Dietprefs is a restaurant discovery app that helps users find restaurants matchi
    - Created `DistanceService`: Haversine distance calculations, bounding box logic
    - Created `FilterService`: Item filtering logic with preference + price support
    - Created `DisplayService`: Display text formatting (DRY across clients)
-   - Refactored `VendorService`: Reduced from 327 to 237 lines
+   - Refactored `VendorService`: Broken into 15 focused methods (see "Code Quality Improvements" above)
 
 ### Priority 2: Component Extraction (Completed)
 1. **Extracted Android UI components**:
@@ -106,7 +148,7 @@ Dietprefs is a restaurant discovery app that helps users find restaurants matchi
 2. **Reduced file sizes**:
    - `SearchResultsScreen.kt`: 543 → 396 lines
    - `PreferenceScreen.kt`: 482 → ~350 lines
-   - Backend `vendor_service.py`: 327 → 237 lines
+   - Backend `vendor_service.py`: 327 → 237 → now refactored into 15 methods
 
 ### VendorListItem Text Spacing Fixes (Completed)
 **Goal**: Fix text overlap between vendor name and rating display in search results.
@@ -456,10 +498,10 @@ The app supports three types of filters:
 - `ApiModels.kt`: API request/response models including `AppConfig`
 
 ### Backend
-- `app/api/v1/config.py`: Configuration endpoint (NEW)
-- `app/schemas/config.py`: Config response schemas (NEW)
-- `app/services/display_service.py`: Display text formatting (NEW)
-- `app/services/vendor_service.py`: Vendor search and item filtering (237 lines)
+- `app/api/v1/config.py`: Configuration endpoint
+- `app/schemas/config.py`: Config response schemas with Pydantic enums
+- `app/services/display_service.py`: Display text formatting
+- `app/services/vendor_service.py`: Vendor search with 15 focused methods
 - `app/services/filter_service.py`: Preference and price filtering logic
 - `app/services/distance_service.py`: Distance calculations
 - `app/api/v1/vendors.py`: Vendor API endpoints (includes display text generation)
@@ -574,3 +616,79 @@ adb shell settings put secure show_ime_with_hard_keyboard 1
 - Difficult to debug issues in production
 
 **Future Fix**: Add Snackbar/Toast notifications or error text displays that observe `sharedViewModel.errorMessage` StateFlow.
+
+---
+
+## Planned Refactoring
+
+The following architectural improvements have been identified but not yet implemented. These are non-critical enhancements that would improve code maintainability and testability.
+
+### 1. Add Dependency Injection to SharedViewModel
+**Current State**: SharedViewModel creates its own VendorRepository instance in the constructor.
+
+**Issue**:
+```kotlin
+class SharedViewModel(
+    private val repository: VendorRepository = VendorRepository()  // Hard-coded dependency
+) : ViewModel()
+```
+
+**Problem**:
+- Cannot test with mock repositories
+- Tight coupling between ViewModel and Repository
+- Cannot swap implementations for testing/debugging
+
+**Proposed Fix**: Use Hilt or manual factory pattern
+```kotlin
+@HiltViewModel
+class SharedViewModel @Inject constructor(
+    private val repository: VendorRepository
+) : ViewModel()
+```
+
+**Benefits**: Testable, flexible, follows Android best practices
+
+---
+
+### 2. Remove DisplayVendor Model, Use VendorResponse Directly
+**Current State**: Converting VendorResponse → DisplayVendor → UI
+
+**Issue**:
+- `DisplayVendor` is a subset of `VendorResponse` with only 7 fields
+- Throws away address, phone, hours, and other data
+- Requires cache lookup when navigating to RestaurantDetailScreen
+- Extra conversion step with no clear benefit
+
+**Files Affected**:
+- `DisplayVendor.kt` (11 lines)
+- `SharedViewModel.kt` (conversion logic, cache management)
+- `SearchResultsScreen.kt` (uses DisplayVendor)
+
+**Proposed Fix**: Use `VendorResponse` everywhere
+- Remove DisplayVendor model entirely
+- Store `List<VendorResponse>` instead of `List<DisplayVendor>`
+- Add computed properties to VendorResponse if needed for UI
+
+**Benefits**: Simpler data flow, no cache lookups, less code
+
+---
+
+### 3. Unify Display Text Formatting (DEBATABLE)
+**Current State**: Two different approaches for filter display text
+
+**Issue**:
+- `PreferenceScreen.kt`: Builds display text locally (lines 275-280)
+- `SearchResultsScreen.kt` / `RestaurantDetailScreen.kt`: Use backend-provided text
+- After search, backend text exists but PreferenceScreen ignores it
+
+**Proposed Fix**: Always use backend text when available
+```kotlin
+val user1Text = user1Display.ifEmpty { buildLocalDisplayText(user1Prefs, user1MaxPrice) }
+```
+
+**Counter-Argument**:
+- PreferenceScreen is for *editing*, not viewing
+- Local formatting works fine and is simpler
+- This may be over-engineering
+
+**Status**: Low priority, may not implement

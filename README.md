@@ -37,8 +37,7 @@ cd android
 ## Documentation
 
 - **[Architecture Overview](docs/architecture.md)** - Multi-platform system design
-- **[Project Guidelines](docs/CLAUDE.md)** - Development context and roadmap
-- **[Backend Details](docs/BACKEND_SUMMARY.md)** - API implementation
+- **[Project Guidelines](CLAUDE.md)** - Development context and roadmap
 - **[Backend Deployment](backend/DEPLOYMENT.md)** - Deployment instructions
 
 ## Features
@@ -72,22 +71,20 @@ cd android
 
 ## Current Status
 
-✅ **Phase 1 Complete**: Backend API deployed and live at https://dietprefs-production.up.railway.app
-✅ **Phase 2 Complete**: Android app fully migrated to REST API with smart caching
-✅ **Phase 3 Complete**: Location services and 10-mile distance filtering
-🚧 **Phase 4 Next**: Feature completion (welcome screen, restaurant details, photo voting)
-❌ **iOS and Web clients** not started
+✅ **Backend**: Deployed and live at https://dietprefs-production.up.railway.app
+✅ **Android App**: Fully functional with all core features
+✅ **Location Services**: 10-mile radius filtering with GPS integration
+✅ **Restaurant Details**: Photo voting, external links, info panel
+✅ **Vendor Filters**: Delivery, cuisine regions, "open now" filtering
+❌ **iOS and Web clients**: Not started
 
-**Recent Achievements**:
-- Android location services integrated (Google Play Services)
-- 10-mile radius filtering in backend
-- Real distance calculations with Haversine formula
-- Permission request UI with proper callbacks
-- Fixed backend bugs (rating calculation, preference filtering)
-- All dietary preferences working (vegetarian, vegan, halal, etc.)
-- Fast loading with cached location (instant vs 2+ seconds)
+**Recent Work** (January 2026):
+- Code quality refactoring: Extracted methods, constants, removed duplication
+- Backend input validation with Pydantic enums
+- Consistent error handling across ViewModel
+- Simplified VendorService into 15 focused methods
 
-See [docs/CLAUDE.md](docs/CLAUDE.md) for detailed status and roadmap.
+See [CLAUDE.md](CLAUDE.md) for detailed documentation and architecture.
 
 ## Live API
 

@@ -106,4 +106,4 @@ railway init
 railway up
 ```
 
-See [architecture.md](../architecture.md) for detailed deployment instructions.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
