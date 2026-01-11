@@ -394,18 +394,15 @@ class VendorService:
     @staticmethod
     def _sort_vendors(vendors: List[VendorResponse], request: VendorSearchRequest) -> List[VendorResponse]:
         """Sort vendors by specified column and direction."""
-        sort_key = None
+        # Enum values can be compared directly (inherits from str)
         if request.sort_by == "rating":
             sort_key = lambda v: v.rating.percentage
         elif request.sort_by == "distance" and request.lat is not None:
             sort_key = lambda v: v.distance_miles if v.distance_miles is not None else float('inf')
-        elif request.sort_by == "item_count":
-            sort_key = lambda v: v.item_counts.total_relevant
-        else:
-            # Default to item_count
+        else:  # "item_count" (default)
             sort_key = lambda v: v.item_counts.total_relevant
 
-        reverse = request.sort_direction.lower() == "desc"
+        reverse = request.sort_direction == "desc"
         return sorted(vendors, key=sort_key, reverse=reverse)
 
     @staticmethod

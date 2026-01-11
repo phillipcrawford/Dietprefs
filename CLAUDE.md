@@ -555,3 +555,22 @@ adb shell settings put secure show_ime_with_hard_keyboard 1
 - Users with physical keyboards (rare on phones) may see similar behavior, which is expected Android OS behavior
 
 **Not Fixed in App Code**: This is Android system-level behavior that cannot be overridden from application code. The workaround requires system settings or ADB configuration.
+
+### No Error UI in Android App
+**Issue**: API errors are captured in `SharedViewModel._errorMessage` StateFlow but are not displayed to users anywhere in the UI.
+
+**Current Behavior**:
+- Network errors, API failures, and validation errors are logged and stored in state
+- No Toast, Snackbar, or error text components show these errors to users
+- Users have no feedback when operations fail silently
+
+**Files Affected**:
+- `SharedViewModel.kt`: Sets `_errorMessage.value` on failures (lines 151, 396, 454, 520, 553)
+- All screens: No UI components observe or display `errorMessage` StateFlow
+
+**Impact**:
+- Low for typical use (Android app sends valid requests)
+- Users unaware of network failures or API issues
+- Difficult to debug issues in production
+
+**Future Fix**: Add Snackbar/Toast notifications or error text displays that observe `sharedViewModel.errorMessage` StateFlow.

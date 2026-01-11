@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 from datetime import datetime
+from enum import Enum
 
 
 class DeliveryOptions(BaseModel):
@@ -86,6 +87,19 @@ class VendorDetailResponse(VendorBase):
         from_attributes = True
 
 
+class SortBy(str, Enum):
+    """Valid sort column options."""
+    RATING = "rating"
+    DISTANCE = "distance"
+    ITEM_COUNT = "item_count"
+
+
+class SortDirection(str, Enum):
+    """Valid sort direction options."""
+    ASC = "asc"
+    DESC = "desc"
+
+
 class VendorSearchRequest(BaseModel):
     """Request schema for vendor search endpoint."""
     user1_preferences: List[str] = Field(default_factory=list, description="Dietary preferences for user 1")
@@ -95,8 +109,8 @@ class VendorSearchRequest(BaseModel):
     lat: Optional[float] = Field(None, description="User latitude for distance calculation")
     lng: Optional[float] = Field(None, description="User longitude for distance calculation")
     search_query: Optional[str] = Field(None, description="Text search across vendor name, address, and tags")
-    sort_by: str = Field("item_count", description="Sort by: rating, distance, or item_count")
-    sort_direction: str = Field("desc", description="Sort direction: asc or desc")
+    sort_by: SortBy = Field(SortBy.ITEM_COUNT, description="Sort by column")
+    sort_direction: SortDirection = Field(SortDirection.DESC, description="Sort direction")
     page: int = Field(1, ge=1, description="Page number (starts at 1)")
     page_size: int = Field(10, ge=1, le=100, description="Results per page")
     vendor_filters: List[str] = Field(
