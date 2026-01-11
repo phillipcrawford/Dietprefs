@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from app.models.vendor import Vendor
 from app.models.item import Item
 from app.schemas.vendor import VendorSearchRequest, VendorResponse, VendorRating, ItemCounts, DeliveryOptions
@@ -10,7 +10,7 @@ from app.services.filter_service import FilterService
 
 
 class VendorService:
-    """Business logic for vendor search and filtering. """
+    """Business logic for vendor search and filtering."""
 
     @staticmethod
     def search_vendors(
@@ -23,15 +23,51 @@ class VendorService:
         Returns:
             Tuple of (vendor_responses, total_count)
         """
-        user1_prefs = request.user1_preferences
-        user2_prefs = request.user2_preferences
-        is_user1_active = len(user1_prefs) > 0
-        is_user2_active = len(user2_prefs) > 0
+        # Fetch vendors with SQL filters applied
+        vendors = VendorService._fetch_filtered_vendors(db, request)
 
+        # Process vendors into response objects
+        vendor_responses = VendorService._process_vendors(vendors, request)
+
+        # Sort results
+        sorted_vendors = VendorService._sort_vendors(vendor_responses, request)
+
+        # Paginate
+        paginated_vendors = VendorService._paginate_results(sorted_vendors, request)
+
+        return paginated_vendors, len(sorted_vendors)
+
+    @staticmethod
+    def _fetch_filtered_vendors(db: Session, request: VendorSearchRequest) -> List[Vendor]:
+        """
+        Build and execute SQL query with all filters applied.
+        Returns list of Vendor models with items eagerly loaded.
+        """
         # Build base query with eager loading
         query = db.query(Vendor).options(selectinload(Vendor.items))
 
-        # Apply distance bounding box filter BEFORE loading vendors (if location provided)
+        # Apply distance filter (bounding box)
+        query = VendorService._apply_distance_filter(query, request)
+
+        # Apply vendor-level filters (delivery, cuisine, etc.)
+        query = VendorService._apply_vendor_filters(query, request)
+
+        # Apply search query and preference filters
+        query = VendorService._apply_search_and_preference_filters(query, request)
+
+        # Execute query
+        vendors = query.all()
+
+        # Apply "open" filter (post-query, requires time-based logic)
+        if request.vendor_filters and "open" in [f.lower().strip() for f in request.vendor_filters]:
+            open_vendor_ids = VendorService.filter_open_vendors(vendors)
+            vendors = [v for v in vendors if v.id in open_vendor_ids]
+
+        return vendors
+
+    @staticmethod
+    def _apply_distance_filter(query, request: VendorSearchRequest):
+        """Apply distance bounding box filter to query."""
         if request.lat is not None and request.lng is not None:
             lat_delta, lng_delta = DistanceService.get_bounding_box_deltas(request.lat)
 
@@ -40,45 +76,55 @@ class VendorService:
                 Vendor.lng.between(request.lng - lng_delta, request.lng + lng_delta)
             )
 
-        # Apply vendor-level filters (after distance, before item join)
-        if request.vendor_filters:
-            filter_conditions = []
+        return query
 
-            for filter_name in request.vendor_filters:
-                filter_lower = filter_name.lower().strip()
+    @staticmethod
+    def _apply_vendor_filters(query, request: VendorSearchRequest):
+        """Apply vendor-level filters (delivery, takeout, cuisine, fusion)."""
+        if not request.vendor_filters:
+            return query
 
-                if filter_lower == "delivery":
-                    filter_conditions.append(Vendor.delivery == True)
-                elif filter_lower == "takeout":
-                    filter_conditions.append(Vendor.takeout == True)
-                elif filter_lower == "fusion":
-                    filter_conditions.append(Vendor.fusion == True)
-                elif filter_lower == "usa":
-                    filter_conditions.append(Vendor.cuisine_usa == True)
-                elif filter_lower == "europe":
-                    filter_conditions.append(Vendor.cuisine_europe == True)
-                elif filter_lower == "north_africa_middle_east":
-                    filter_conditions.append(Vendor.cuisine_north_africa_middle_east == True)
-                elif filter_lower == "mexico_south_america":
-                    filter_conditions.append(Vendor.cuisine_mexico_south_america == True)
-                elif filter_lower == "sub_saharan_africa":
-                    filter_conditions.append(Vendor.cuisine_sub_saharan_africa == True)
-                elif filter_lower == "east_asia":
-                    filter_conditions.append(Vendor.cuisine_east_asia == True)
-                elif filter_lower == "open":
-                    # Special case: filter by "open now" status
-                    # Note: This requires fetching vendors first, then filtering
-                    # We'll handle this after the query executes
-                    pass
+        filter_conditions = []
 
-            # Apply all vendor filters with AND logic
-            if filter_conditions:
-                query = query.filter(*filter_conditions)
+        for filter_name in request.vendor_filters:
+            filter_lower = filter_name.lower().strip()
 
-        # Store if "open" filter was requested (handle after query)
-        has_open_filter = "open" in [f.lower().strip() for f in request.vendor_filters] if request.vendor_filters else False
+            if filter_lower == "delivery":
+                filter_conditions.append(Vendor.delivery == True)
+            elif filter_lower == "takeout":
+                filter_conditions.append(Vendor.takeout == True)
+            elif filter_lower == "fusion":
+                filter_conditions.append(Vendor.fusion == True)
+            elif filter_lower == "usa":
+                filter_conditions.append(Vendor.cuisine_usa == True)
+            elif filter_lower == "europe":
+                filter_conditions.append(Vendor.cuisine_europe == True)
+            elif filter_lower == "north_africa_middle_east":
+                filter_conditions.append(Vendor.cuisine_north_africa_middle_east == True)
+            elif filter_lower == "mexico_south_america":
+                filter_conditions.append(Vendor.cuisine_mexico_south_america == True)
+            elif filter_lower == "sub_saharan_africa":
+                filter_conditions.append(Vendor.cuisine_sub_saharan_africa == True)
+            elif filter_lower == "east_asia":
+                filter_conditions.append(Vendor.cuisine_east_asia == True)
+            # Note: "open" filter handled post-query in _fetch_filtered_vendors
 
-        # Check if price filters or preferences are active
+        # Apply all vendor filters with AND logic
+        if filter_conditions:
+            query = query.filter(*filter_conditions)
+
+        return query
+
+    @staticmethod
+    def _apply_search_and_preference_filters(query, request: VendorSearchRequest):
+        """
+        Apply text search and preference filters.
+        Joins Item table if needed and applies filters with correct logic.
+        """
+        user1_prefs = request.user1_preferences
+        user2_prefs = request.user2_preferences
+        is_user1_active = len(user1_prefs) > 0
+        is_user2_active = len(user2_prefs) > 0
         user1_has_price = request.user1_max_price is not None
         user2_has_price = request.user2_max_price is not None
         has_search_query = bool(request.search_query and request.search_query.strip())
@@ -87,11 +133,11 @@ class VendorService:
         needs_preference_filter = is_user1_active or is_user2_active or user1_has_price or user2_has_price
         needs_item_join = has_search_query or needs_preference_filter
 
-        # Build filter conditions
-        search_filter = None
-        preference_filter = None
+        if not needs_item_join:
+            return query
 
         # Build text search filter (vendor fields OR item names)
+        search_filter = None
         if has_search_query:
             search_pattern = f"%{request.search_query.strip()}%"
             search_filter = or_(
@@ -102,6 +148,7 @@ class VendorService:
             )
 
         # Build preference filter
+        preference_filter = None
         if needs_preference_filter:
             user1_filter = FilterService.build_preference_filter(user1_prefs, request.user1_max_price)
             user2_filter = FilterService.build_preference_filter(user2_prefs, request.user2_max_price)
@@ -114,122 +161,239 @@ class VendorService:
             else:
                 preference_filter = user2_filter
 
-        # Join with items once if needed and apply filters
-        if needs_item_join:
-            query = query.join(Item)
+        # Join with items and apply filters
+        query = query.join(Item)
 
-            # Apply filters (both must match if both exist)
-            if search_filter is not None:
-                query = query.filter(search_filter)
-            if preference_filter is not None:
-                query = query.filter(preference_filter)
+        # Apply filters (both must match if both exist)
+        if search_filter is not None:
+            query = query.filter(search_filter)
+        if preference_filter is not None:
+            query = query.filter(preference_filter)
 
-            query = query.distinct()
+        query = query.distinct()
 
-        # Execute query to get vendors (with items eagerly loaded)
-        vendors = query.all()
+        return query
 
-        # Apply "open" filter if requested (post-query filtering)
-        if has_open_filter:
-            open_vendor_ids = VendorService.filter_open_vendors(vendors)
-            vendors = [v for v in vendors if v.id in open_vendor_ids]
-
+    @staticmethod
+    def _process_vendors(vendors: List[Vendor], request: VendorSearchRequest) -> List[VendorResponse]:
+        """
+        Process vendors into VendorResponse objects.
+        Filters items, calculates ratings, and builds response objects.
+        """
         processed_vendors = []
 
         for vendor in vendors:
-            # Filter items for each user
-            user1_matching_items = []
-            user2_matching_items = []
+            vendor_response = VendorService._process_single_vendor(vendor, request)
+            if vendor_response:  # None if vendor doesn't meet criteria
+                processed_vendors.append(vendor_response)
 
-            for item in vendor.items:
-                if (is_user1_active or user1_has_price) and FilterService.item_matches_preferences(item, user1_prefs, request.user1_max_price):
-                    user1_matching_items.append(item)
-                if (is_user2_active or user2_has_price) and FilterService.item_matches_preferences(item, user2_prefs, request.user2_max_price):
-                    user2_matching_items.append(item)
+        return processed_vendors
 
-            # When both users have filters, vendor must have items for BOTH users
-            if (is_user1_active or user1_has_price) and (is_user2_active or user2_has_price):
-                if len(user1_matching_items) == 0 or len(user2_matching_items) == 0:
-                    continue
+    @staticmethod
+    def _process_single_vendor(vendor: Vendor, request: VendorSearchRequest) -> Optional[VendorResponse]:
+        """
+        Process a single vendor into a VendorResponse.
+        Returns None if vendor doesn't meet dual-user criteria.
+        """
+        # Filter items for each user
+        user1_matching_items, user2_matching_items = VendorService._filter_vendor_items(vendor, request)
 
-            # Determine relevant items for rating calculation
-            if (is_user1_active or user1_has_price) and (is_user2_active or user2_has_price):
-                # Combine both users' matching items (distinct by ID)
-                seen_ids = set()
-                relevant_items = []
-                for item in user1_matching_items + user2_matching_items:
-                    if item.id not in seen_ids:
-                        seen_ids.add(item.id)
-                        relevant_items.append(item)
-            elif is_user1_active or user1_has_price:
-                relevant_items = user1_matching_items
-            elif is_user2_active or user2_has_price:
-                relevant_items = user2_matching_items
-            else:
-                # No preferences or price filters selected, all items are relevant
-                relevant_items = vendor.items
+        # Check dual-user criteria
+        if not VendorService._meets_dual_user_criteria(user1_matching_items, user2_matching_items, request):
+            return None
 
-            # Skip vendor if no relevant items found (when preferences or price filters are active)
-            if (is_user1_active or is_user2_active or user1_has_price or user2_has_price) and len(relevant_items) == 0:
-                continue
+        # Determine relevant items for rating calculation
+        relevant_items = VendorService._get_relevant_items(
+            user1_matching_items, user2_matching_items, vendor.items, request
+        )
 
-            # Calculate context-aware rating
-            total_upvotes = sum(item.upvotes for item in relevant_items)
-            total_votes = sum(item.total_votes for item in relevant_items)
-            rating_percentage = min(total_upvotes / total_votes, 1.0) if total_votes > 0 else 0.0
+        # Skip vendor if no relevant items (when filters are active)
+        user1_prefs = request.user1_preferences
+        user2_prefs = request.user2_preferences
+        is_user1_active = len(user1_prefs) > 0
+        is_user2_active = len(user2_prefs) > 0
+        user1_has_price = request.user1_max_price is not None
+        user2_has_price = request.user2_max_price is not None
 
-            # Calculate exact distance if user location provided
-            # (bounding box filter already applied in SQL)
-            distance_miles = None
-            if request.lat is not None and request.lng is not None:
-                distance_miles = DistanceService.calculate_distance(
-                    request.lat, request.lng, vendor.lat, vendor.lng
-                )
+        if (is_user1_active or is_user2_active or user1_has_price or user2_has_price) and len(relevant_items) == 0:
+            return None
 
-                # Apply exact distance filter (after rough bounding box)
-                if not DistanceService.is_within_distance(
-                    request.lat, request.lng, vendor.lat, vendor.lng
-                ):
-                    continue
+        # Calculate rating
+        rating = VendorService._calculate_rating(relevant_items)
 
-            # Build response object
-            vendor_response = VendorResponse(
-                id=vendor.id,
-                name=vendor.name,
-                lat=vendor.lat,
-                lng=vendor.lng,
-                address=vendor.address,
-                zipcode=vendor.zipcode,
-                phone=vendor.phone,
-                website=vendor.website,
-                hours=vendor.hours,
-                seo_tags=vendor.seo_tags,
-                region=vendor.region,
-                custom_by_nature=vendor.custom_by_nature,
-                distance_miles=distance_miles,
-                rating=VendorRating(
-                    upvotes=total_upvotes,
-                    total_votes=total_votes,
-                    percentage=rating_percentage
-                ),
-                item_counts=ItemCounts(
-                    user1_matches=len(user1_matching_items),
-                    user2_matches=len(user2_matching_items),
-                    total_relevant=len(relevant_items)
-                ),
-                delivery_options=DeliveryOptions(
-                    delivery=vendor.delivery,
-                    takeout=vendor.takeout,
-                    grubhub=vendor.grubhub,
-                    doordash=vendor.doordash,
-                    ubereats=vendor.ubereats,
-                    postmates=vendor.postmates
-                )
+        # Calculate distance
+        distance_miles = VendorService._calculate_distance(vendor, request)
+
+        # Skip if outside distance range
+        if distance_miles is not None and request.lat is not None and request.lng is not None:
+            if not DistanceService.is_within_distance(
+                request.lat, request.lng, vendor.lat, vendor.lng
+            ):
+                return None
+
+        # Build response object
+        return VendorService._build_vendor_response(
+            vendor, rating, distance_miles, user1_matching_items, user2_matching_items, relevant_items
+        )
+
+    @staticmethod
+    def _filter_vendor_items(vendor: Vendor, request: VendorSearchRequest) -> Tuple[List[Item], List[Item]]:
+        """
+        Filter vendor's items for each user based on preferences and price.
+        Returns tuple of (user1_matching_items, user2_matching_items).
+        """
+        user1_prefs = request.user1_preferences
+        user2_prefs = request.user2_preferences
+        is_user1_active = len(user1_prefs) > 0
+        is_user2_active = len(user2_prefs) > 0
+        user1_has_price = request.user1_max_price is not None
+        user2_has_price = request.user2_max_price is not None
+
+        user1_matching_items = []
+        user2_matching_items = []
+
+        for item in vendor.items:
+            if (is_user1_active or user1_has_price) and FilterService.item_matches_preferences(
+                item, user1_prefs, request.user1_max_price
+            ):
+                user1_matching_items.append(item)
+
+            if (is_user2_active or user2_has_price) and FilterService.item_matches_preferences(
+                item, user2_prefs, request.user2_max_price
+            ):
+                user2_matching_items.append(item)
+
+        return user1_matching_items, user2_matching_items
+
+    @staticmethod
+    def _meets_dual_user_criteria(
+        user1_items: List[Item],
+        user2_items: List[Item],
+        request: VendorSearchRequest
+    ) -> bool:
+        """
+        Check if vendor meets dual-user criteria.
+        When both users have filters, vendor must have items for BOTH users.
+        """
+        user1_prefs = request.user1_preferences
+        user2_prefs = request.user2_preferences
+        is_user1_active = len(user1_prefs) > 0
+        is_user2_active = len(user2_prefs) > 0
+        user1_has_price = request.user1_max_price is not None
+        user2_has_price = request.user2_max_price is not None
+
+        # When both users have filters, vendor must have items for BOTH users
+        if (is_user1_active or user1_has_price) and (is_user2_active or user2_has_price):
+            if len(user1_items) == 0 or len(user2_items) == 0:
+                return False
+
+        return True
+
+    @staticmethod
+    def _get_relevant_items(
+        user1_items: List[Item],
+        user2_items: List[Item],
+        all_items: List[Item],
+        request: VendorSearchRequest
+    ) -> List[Item]:
+        """
+        Determine which items are relevant for rating calculation.
+
+        Logic:
+        - Both users active: Union of both users' items (distinct)
+        - User 1 only: User 1's items
+        - User 2 only: User 2's items
+        - No users: All items
+        """
+        user1_prefs = request.user1_preferences
+        user2_prefs = request.user2_preferences
+        is_user1_active = len(user1_prefs) > 0
+        is_user2_active = len(user2_prefs) > 0
+        user1_has_price = request.user1_max_price is not None
+        user2_has_price = request.user2_max_price is not None
+
+        if (is_user1_active or user1_has_price) and (is_user2_active or user2_has_price):
+            # Combine both users' matching items (distinct by ID)
+            seen_ids = set()
+            relevant_items = []
+            for item in user1_items + user2_items:
+                if item.id not in seen_ids:
+                    seen_ids.add(item.id)
+                    relevant_items.append(item)
+            return relevant_items
+        elif is_user1_active or user1_has_price:
+            return user1_items
+        elif is_user2_active or user2_has_price:
+            return user2_items
+        else:
+            # No preferences or price filters selected, all items are relevant
+            return all_items
+
+    @staticmethod
+    def _calculate_rating(items: List[Item]) -> VendorRating:
+        """Calculate context-aware rating from relevant items."""
+        total_upvotes = sum(item.upvotes for item in items)
+        total_votes = sum(item.total_votes for item in items)
+        rating_percentage = min(total_upvotes / total_votes, 1.0) if total_votes > 0 else 0.0
+
+        return VendorRating(
+            upvotes=total_upvotes,
+            total_votes=total_votes,
+            percentage=rating_percentage
+        )
+
+    @staticmethod
+    def _calculate_distance(vendor: Vendor, request: VendorSearchRequest) -> Optional[float]:
+        """Calculate exact distance if user location provided."""
+        if request.lat is not None and request.lng is not None:
+            return DistanceService.calculate_distance(
+                request.lat, request.lng, vendor.lat, vendor.lng
             )
+        return None
 
-            processed_vendors.append(vendor_response)
+    @staticmethod
+    def _build_vendor_response(
+        vendor: Vendor,
+        rating: VendorRating,
+        distance_miles: Optional[float],
+        user1_items: List[Item],
+        user2_items: List[Item],
+        relevant_items: List[Item]
+    ) -> VendorResponse:
+        """Build VendorResponse object from vendor and calculated data."""
+        return VendorResponse(
+            id=vendor.id,
+            name=vendor.name,
+            lat=vendor.lat,
+            lng=vendor.lng,
+            address=vendor.address,
+            zipcode=vendor.zipcode,
+            phone=vendor.phone,
+            website=vendor.website,
+            hours=vendor.hours,
+            seo_tags=vendor.seo_tags,
+            region=vendor.region,
+            custom_by_nature=vendor.custom_by_nature,
+            distance_miles=distance_miles,
+            rating=rating,
+            item_counts=ItemCounts(
+                user1_matches=len(user1_items),
+                user2_matches=len(user2_items),
+                total_relevant=len(relevant_items)
+            ),
+            delivery_options=DeliveryOptions(
+                delivery=vendor.delivery,
+                takeout=vendor.takeout,
+                grubhub=vendor.grubhub,
+                doordash=vendor.doordash,
+                ubereats=vendor.ubereats,
+                postmates=vendor.postmates
+            )
+        )
 
-        # Sort vendors
+    @staticmethod
+    def _sort_vendors(vendors: List[VendorResponse], request: VendorSearchRequest) -> List[VendorResponse]:
+        """Sort vendors by specified column and direction."""
         sort_key = None
         if request.sort_by == "rating":
             sort_key = lambda v: v.rating.percentage
@@ -242,15 +406,17 @@ class VendorService:
             sort_key = lambda v: v.item_counts.total_relevant
 
         reverse = request.sort_direction.lower() == "desc"
-        sorted_vendors = sorted(processed_vendors, key=sort_key, reverse=reverse)
+        return sorted(vendors, key=sort_key, reverse=reverse)
 
-        # Pagination
-        total_count = len(sorted_vendors)
+    @staticmethod
+    def _paginate_results(
+        vendors: List[VendorResponse],
+        request: VendorSearchRequest
+    ) -> List[VendorResponse]:
+        """Paginate sorted vendor results."""
         start_index = (request.page - 1) * request.page_size
         end_index = start_index + request.page_size
-        paginated_vendors = sorted_vendors[start_index:end_index]
-
-        return paginated_vendors, total_count
+        return vendors[start_index:end_index]
 
     @staticmethod
     def get_vendor_by_id(db: Session, vendor_id: int) -> Optional[Vendor]:
