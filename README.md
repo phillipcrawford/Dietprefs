@@ -58,10 +58,8 @@ cd android
 
 **Android**:
 - Jetpack Compose
-- Kotlin
-- MVVM Architecture
+- Kotlin MVVM + Hilt DI
 - Retrofit + OkHttp
-- Repository Pattern
 - StateFlow
 - Google Play Services Location
 
@@ -79,10 +77,10 @@ cd android
 ❌ **iOS and Web clients**: Not started
 
 **Recent Work** (January 2026):
-- Code quality refactoring: Extracted methods, constants, removed duplication
+- Hilt dependency injection with KSP (testable, decoupled ViewModels)
+- Removed DisplayVendor model layer (direct API-to-UI data flow)
+- VendorService refactored into 15 focused methods (DRY compliance)
 - Backend input validation with Pydantic enums
-- Consistent error handling across ViewModel
-- Simplified VendorService into 15 focused methods
 
 See [CLAUDE.md](CLAUDE.md) for detailed documentation and architecture.
 

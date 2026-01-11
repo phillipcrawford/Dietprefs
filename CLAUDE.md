@@ -619,76 +619,19 @@ adb shell settings put secure show_ime_with_hard_keyboard 1
 
 ---
 
-## Planned Refactoring
+## Completed Refactoring (January 2026)
 
-The following architectural improvements have been identified but not yet implemented. These are non-critical enhancements that would improve code maintainability and testability.
+### 1. Hilt Dependency Injection ✅
+**What**: Added Hilt DI (v2.48) with KSP instead of KAPT
+**Files**: `DietPrefsApplication.kt`, `di/AppModule.kt`, `SharedViewModel.kt`, `MainActivity.kt`
+**Result**: `@HiltViewModel SharedViewModel @Inject constructor(repository: VendorRepository)`
+**Benefit**: Testable, decoupled, follows Android best practices
 
-### 1. Add Dependency Injection to SharedViewModel
-**Current State**: SharedViewModel creates its own VendorRepository instance in the constructor.
+### 2. Removed DisplayVendor Model ✅
+**What**: Eliminated unnecessary conversion layer between API and UI
+**Files**: Deleted `DisplayVendor.kt`, updated `VendorListItem.kt`, `SharedViewModel.kt`, `SearchResultsScreen.kt`
+**Result**: Direct use of `VendorResponse` throughout app, removed duplicate cache
+**Benefit**: 50+ lines removed, simpler data flow, all vendor data preserved
 
-**Issue**:
-```kotlin
-class SharedViewModel(
-    private val repository: VendorRepository = VendorRepository()  // Hard-coded dependency
-) : ViewModel()
-```
-
-**Problem**:
-- Cannot test with mock repositories
-- Tight coupling between ViewModel and Repository
-- Cannot swap implementations for testing/debugging
-
-**Proposed Fix**: Use Hilt or manual factory pattern
-```kotlin
-@HiltViewModel
-class SharedViewModel @Inject constructor(
-    private val repository: VendorRepository
-) : ViewModel()
-```
-
-**Benefits**: Testable, flexible, follows Android best practices
-
----
-
-### 2. Remove DisplayVendor Model, Use VendorResponse Directly
-**Current State**: Converting VendorResponse → DisplayVendor → UI
-
-**Issue**:
-- `DisplayVendor` is a subset of `VendorResponse` with only 7 fields
-- Throws away address, phone, hours, and other data
-- Requires cache lookup when navigating to RestaurantDetailScreen
-- Extra conversion step with no clear benefit
-
-**Files Affected**:
-- `DisplayVendor.kt` (11 lines)
-- `SharedViewModel.kt` (conversion logic, cache management)
-- `SearchResultsScreen.kt` (uses DisplayVendor)
-
-**Proposed Fix**: Use `VendorResponse` everywhere
-- Remove DisplayVendor model entirely
-- Store `List<VendorResponse>` instead of `List<DisplayVendor>`
-- Add computed properties to VendorResponse if needed for UI
-
-**Benefits**: Simpler data flow, no cache lookups, less code
-
----
-
-### 3. Unify Display Text Formatting (DEBATABLE)
-**Current State**: Two different approaches for filter display text
-
-**Issue**:
-- `PreferenceScreen.kt`: Builds display text locally (lines 275-280)
-- `SearchResultsScreen.kt` / `RestaurantDetailScreen.kt`: Use backend-provided text
-- After search, backend text exists but PreferenceScreen ignores it
-
-**Proposed Fix**: Always use backend text when available
-```kotlin
-val user1Text = user1Display.ifEmpty { buildLocalDisplayText(user1Prefs, user1MaxPrice) }
-```
-
-**Counter-Argument**:
-- PreferenceScreen is for *editing*, not viewing
-- Local formatting works fine and is simpler
-- This may be over-engineering
-
-**Status**: Low priority, may not implement
+### 3. Display Text Formatting (NOT IMPLEMENTED)
+**Status**: Decided against unifying - PreferenceScreen local formatting works fine for editing use case
