@@ -1,6 +1,7 @@
 """Configuration schemas for app-wide settings."""
 from pydantic import BaseModel, Field
 from typing import List
+from enum import Enum
 
 
 class PricingConfig(BaseModel):
@@ -56,3 +57,30 @@ class AppConfig(BaseModel):
     pagination: PaginationConfig = Field(default_factory=PaginationConfig)
     location: LocationConfig = Field(default_factory=LocationConfig)
     sorting: SortingConfig = Field(default_factory=SortingConfig)
+
+
+class PreferenceCategory(str, Enum):
+    """Categories for organizing dietary preferences."""
+    DIETARY = "dietary"
+    MEAT = "meat"
+    ALLERGEN = "allergen"
+    NUTRITIONAL = "nutritional"
+    CLASSIFICATION = "classification"
+    PRICE = "price"
+
+
+class PreferenceMetadata(BaseModel):
+    """Metadata for a single dietary preference."""
+    api_name: str = Field(..., description="API field name (snake_case)")
+    display: str = Field(..., description="User-facing display text")
+    category: PreferenceCategory = Field(..., description="Preference category")
+    description: str = Field(default="", description="Optional description of the preference")
+
+
+class PreferencesConfig(BaseModel):
+    """Complete list of available preferences with metadata."""
+    version: str = Field("1.0.0", description="Preferences schema version")
+    preferences: List[PreferenceMetadata] = Field(
+        default_factory=list,
+        description="All available dietary preferences"
+    )

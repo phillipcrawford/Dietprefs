@@ -568,9 +568,22 @@ MAX_DISTANCE_MILES = 10.0
 - ✅ Configuration endpoint (prices, pagination, sorting, location)
 - ✅ Display text formatting on backend
 - ✅ Filter logic centralized on backend
+- ✅ **Preferences metadata endpoint** (January 2026)
+
+**Preferences Metadata Endpoint** (NEW - January 2026):
+- **Endpoint**: `/api/v1/preferences`
+- **Purpose**: Single source of truth for preference display strings
+- **Returns**: All 33 preferences with api_name, display, category, and description
+- **Benefits**:
+  - iOS/Web get identical display strings without reimplementing formatting
+  - Change "bacon/pork/ham" → "pork products" in one place (backend)
+  - Offline-ready: Android caches metadata on app launch with enum fallback
+- **Implementation**:
+  - Backend: `PreferencesConfig` schema with `PreferenceMetadata` objects
+  - Android: `PreferenceDisplayFormatter` uses cached metadata, falls back to enum
+  - Fetched on app startup alongside `/api/v1/config`
 
 **Future Enhancements** (for iOS/Web):
-- `/api/v1/preferences` endpoint: Return full preference list with metadata
 - Localization support in config responses
 - Feature flags for A/B testing
 - Region-specific configuration

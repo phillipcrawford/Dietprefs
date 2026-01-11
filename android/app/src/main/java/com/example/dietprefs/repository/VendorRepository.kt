@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.dietprefs.network.DietPrefsApiService
 import com.example.dietprefs.network.RetrofitClient
 import com.example.dietprefs.network.models.AppConfig
+import com.example.dietprefs.network.models.PreferencesConfig
 import com.example.dietprefs.network.models.VendorSearchRequest
 import com.example.dietprefs.network.models.VendorSearchResponse
 import com.example.dietprefs.network.models.ItemResponse
@@ -19,6 +20,17 @@ class VendorRepository(
             Result.success(config)
         } catch (e: Exception) {
             Log.e("VendorRepository", "Failed to fetch config", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getPreferences(): Result<PreferencesConfig> {
+        return try {
+            val preferences = apiService.getPreferences()
+            Log.d("VendorRepository", "Preferences fetched: ${preferences.preferences.size} items")
+            Result.success(preferences)
+        } catch (e: Exception) {
+            Log.e("VendorRepository", "Failed to fetch preferences", e)
             Result.failure(e)
         }
     }

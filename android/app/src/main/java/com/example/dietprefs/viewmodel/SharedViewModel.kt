@@ -13,6 +13,8 @@ import com.example.dietprefs.location.UserLocation
 import com.example.dietprefs.network.models.VendorResponse
 import com.example.dietprefs.network.models.ItemResponse
 import com.example.dietprefs.network.models.AppConfig
+import com.example.dietprefs.network.models.PreferencesConfig
+import com.example.dietprefs.network.models.PreferenceMetadata
 import com.example.dietprefs.network.models.PricingConfig
 import com.example.dietprefs.network.models.PaginationConfig
 import com.example.dietprefs.network.models.LocationConfig
@@ -53,6 +55,10 @@ class SharedViewModel @Inject constructor(
     // App configuration from backend
     private val _appConfig = MutableStateFlow<AppConfig?>(null)
     val appConfig: StateFlow<AppConfig?> = _appConfig.asStateFlow()
+
+    // Cached preference metadata from backend (for display text formatting)
+    private val _preferenceMetadata = MutableStateFlow<Map<String, String>>(emptyMap())
+    val preferenceMetadata: StateFlow<Map<String, String>> = _preferenceMetadata.asStateFlow()
 
     // Categorical filters: Boolean preferences (vegetarian, gluten-free, etc.)
     private val _user1Prefs = MutableStateFlow<Set<Preference>>(emptySet())
@@ -134,8 +140,9 @@ class SharedViewModel @Inject constructor(
     val selectedItemIndex: StateFlow<Int> = _selectedItemIndex.asStateFlow()
 
     init {
-        // Fetch app configuration on ViewModel initialization
+        // Fetch app configuration and preference metadata on ViewModel initialization
         fetchConfig()
+        fetchPreferences()
     }
 
     /**
@@ -152,6 +159,30 @@ class SharedViewModel @Inject constructor(
                 _errorMessage.value = error.message ?: "Failed to fetch configuration"
                 android.util.Log.e("SharedViewModel", "Failed to fetch config", error)
                 // App continues with hardcoded Constants as fallback
+            }
+        }
+    }
+
+    /**
+     * Fetch preference metadata from backend.
+     * This provides display strings for all dietary preferences,
+     * ensuring consistent formatting across all clients (Android, iOS, Web).
+     *
+     * Cached as a Map<apiName, displayText> for fast lookups.
+     * Falls back to Preference enum if fetch fails.
+     */
+    private fun fetchPreferences() {
+        viewModelScope.launch {
+            repository.getPreferences().onSuccess { preferencesConfig ->
+                // Convert list to map for fast lookup: api_name -> display
+                val metadataMap = preferencesConfig.preferences.associate {
+                    it.apiName to it.display
+                }
+                _preferenceMetadata.value = metadataMap
+                android.util.Log.d("SharedViewModel", "Preferences metadata cached: ${metadataMap.size} items")
+            }.onFailure { error ->
+                android.util.Log.e("SharedViewModel", "Failed to fetch preferences, using enum fallback", error)
+                // App continues with hardcoded Preference enum as fallback
             }
         }
     }

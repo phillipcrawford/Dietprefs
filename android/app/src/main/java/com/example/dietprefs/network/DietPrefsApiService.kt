@@ -1,6 +1,7 @@
 package com.example.dietprefs.network
 
 import com.example.dietprefs.network.models.AppConfig
+import com.example.dietprefs.network.models.PreferencesConfig
 import com.example.dietprefs.network.models.VendorSearchRequest
 import com.example.dietprefs.network.models.VendorSearchResponse
 import com.example.dietprefs.network.models.ItemResponse
@@ -10,6 +11,9 @@ interface DietPrefsApiService {
 
     @GET("/api/v1/config")
     suspend fun getConfig(): AppConfig
+
+    @GET("/api/v1/preferences")
+    suspend fun getPreferences(): PreferencesConfig
 
     @POST("/api/v1/vendors/search")
     suspend fun searchVendors(

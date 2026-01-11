@@ -56,6 +56,19 @@ data class SortingConfig(
     val defaultSortDirection: String
 )
 
+data class PreferenceMetadata(
+    @SerializedName("api_name")
+    val apiName: String,
+    val display: String,
+    val category: String,
+    val description: String = ""
+)
+
+data class PreferencesConfig(
+    val version: String,
+    val preferences: List<PreferenceMetadata>
+)
+
 // ===== Request Models =====
 
 data class VendorSearchRequest(

@@ -33,6 +33,7 @@ import com.example.dietprefs.ui.theme.selectedGrey
 import com.example.dietprefs.ui.theme.selectedTeal
 import com.example.dietprefs.ui.theme.user1Red
 import com.example.dietprefs.ui.theme.user2Magenta
+import com.example.dietprefs.util.PreferenceDisplayFormatter
 import com.example.dietprefs.viewmodel.SharedViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -51,6 +52,7 @@ fun PreferenceScreen(
     val user1MaxPrice by sharedViewModel.user1MaxPrice.collectAsState()
     val user2MaxPrice by sharedViewModel.user2MaxPrice.collectAsState()
     val appConfig by sharedViewModel.appConfig.collectAsState()
+    val preferenceMetadata by sharedViewModel.preferenceMetadata.collectAsState()
     val isUser2Active = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -93,6 +95,7 @@ fun PreferenceScreen(
                 user2Prefs = user2Prefs,
                 user1MaxPrice = user1MaxPrice,
                 user2MaxPrice = user2MaxPrice,
+                preferenceMetadata = preferenceMetadata,
                 onSettingsClick = onSettingsClick,
                 onUserModeClick = onUserModeClick
             )
@@ -267,17 +270,21 @@ fun PreferencesTopBar(
     user2Prefs: Set<Preference>,
     user1MaxPrice: Float?,
     user2MaxPrice: Float?,
+    preferenceMetadata: Map<String, String>,
     onSettingsClick: () -> Unit,
     onUserModeClick: () -> Unit
 ) {
-    // Build display text from preferences
-    // LOW_PRICE preference is formatted as "under $X" using the price value
-    val user1DisplayText = user1Prefs
-        .map { if (it == Preference.LOW_PRICE) "under $${"%.0f".format(user1MaxPrice ?: 0)}" else it.display }
-        .joinToString(", ")
-    val user2DisplayText = user2Prefs
-        .map { if (it == Preference.LOW_PRICE) "under $${"%.0f".format(user2MaxPrice ?: 0)}" else it.display }
-        .joinToString(", ")
+    // Build display text using formatter (backend metadata + fallback to enum)
+    val user1DisplayText = PreferenceDisplayFormatter.buildDisplayText(
+        preferences = user1Prefs,
+        maxPrice = user1MaxPrice,
+        preferenceMetadata = preferenceMetadata
+    )
+    val user2DisplayText = PreferenceDisplayFormatter.buildDisplayText(
+        preferences = user2Prefs,
+        maxPrice = user2MaxPrice,
+        preferenceMetadata = preferenceMetadata
+    )
 
     Box(
         modifier = Modifier
