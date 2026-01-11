@@ -24,36 +24,10 @@ class VendorRepository(
     }
 
     suspend fun searchVendors(
-        user1Preferences: List<String>,
-        user2Preferences: List<String>,
-        user1MaxPrice: Float? = null,
-        user2MaxPrice: Float? = null,
-        latitude: Double? = null,
-        longitude: Double? = null,
-        searchQuery: String? = null,
-        sortBy: String = "item_count",
-        sortDirection: String = "desc",
-        page: Int = 1,
-        pageSize: Int = 10,
-        vendorFilters: List<String> = emptyList()
+        request: VendorSearchRequest
     ): Result<VendorSearchResponse> {
         return try {
-            val request = VendorSearchRequest(
-                user1Preferences = user1Preferences,
-                user2Preferences = user2Preferences,
-                user1MaxPrice = user1MaxPrice,
-                user2MaxPrice = user2MaxPrice,
-                lat = latitude,
-                lng = longitude,
-                searchQuery = searchQuery,
-                sortBy = sortBy,
-                sortDirection = sortDirection,
-                page = page,
-                pageSize = pageSize,
-                vendorFilters = vendorFilters
-            )
-
-            Log.d("VendorRepository", "Searching with location: lat=$latitude, lng=$longitude, query=$searchQuery")
+            Log.d("VendorRepository", "Searching with location: lat=${request.lat}, lng=${request.lng}, query=${request.searchQuery}")
             Log.d("VendorRepository", "Request: $request")
 
             val response = apiService.searchVendors(request)

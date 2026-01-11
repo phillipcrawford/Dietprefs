@@ -17,6 +17,7 @@ import com.example.dietprefs.network.models.PricingConfig
 import com.example.dietprefs.network.models.PaginationConfig
 import com.example.dietprefs.network.models.LocationConfig
 import com.example.dietprefs.network.models.SortingConfig
+import com.example.dietprefs.network.models.VendorSearchRequest
 import com.example.dietprefs.repository.VendorRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -187,6 +188,30 @@ class SharedViewModel(
         return Pair(sortBy, sortDirection)
     }
 
+    /**
+     * Helper method to build search request with all current filters and state.
+     * Eliminates duplication between searchVendors and loadNextPage.
+     */
+    private fun buildSearchRequest(page: Int): VendorSearchRequest {
+        val (user1ApiPrefs, user2ApiPrefs) = getApiPreferences()
+        val (sortBy, sortDirection) = getSortParameters()
+
+        return VendorSearchRequest(
+            user1Preferences = user1ApiPrefs,
+            user2Preferences = user2ApiPrefs,
+            user1MaxPrice = _user1MaxPrice.value,
+            user2MaxPrice = _user2MaxPrice.value,
+            lat = _userLocation.value?.latitude,
+            lng = _userLocation.value?.longitude,
+            searchQuery = _searchQuery.value.ifBlank { null },
+            sortBy = sortBy,
+            sortDirection = sortDirection,
+            page = page,
+            pageSize = pageSize,
+            vendorFilters = _vendorFilters.value.toList()
+        )
+    }
+
     fun selectVendor(vendor: VendorResponse) {
         _selectedVendor.value = vendor
     }
@@ -353,29 +378,10 @@ class SharedViewModel(
             _errorMessage.value = null
 
             try {
-                // Convert preferences to API format
-                val (user1ApiPrefs, user2ApiPrefs) = getApiPreferences()
-
-                // Convert sort state to API format
-                val (sortBy, sortDirection) = getSortParameters()
-
                 // Reset to first page
                 currentPage = 1
 
-                val result = repository.searchVendors(
-                    user1Preferences = user1ApiPrefs,
-                    user2Preferences = user2ApiPrefs,
-                    user1MaxPrice = _user1MaxPrice.value,
-                    user2MaxPrice = _user2MaxPrice.value,
-                    latitude = _userLocation.value?.latitude,
-                    longitude = _userLocation.value?.longitude,
-                    searchQuery = _searchQuery.value.ifBlank { null },
-                    sortBy = sortBy,
-                    sortDirection = sortDirection,
-                    page = currentPage,
-                    pageSize = pageSize,
-                    vendorFilters = _vendorFilters.value.toList()
-                )
+                val result = repository.searchVendors(buildSearchRequest(page = currentPage))
 
                 result.onSuccess { response ->
                     _totalResultsCount.value = response.pagination.totalResults
@@ -424,23 +430,7 @@ class SharedViewModel(
             try {
                 currentPage++
 
-                val (user1ApiPrefs, user2ApiPrefs) = getApiPreferences()
-                val (sortBy, sortDirection) = getSortParameters()
-
-                val result = repository.searchVendors(
-                    user1Preferences = user1ApiPrefs,
-                    user2Preferences = user2ApiPrefs,
-                    user1MaxPrice = _user1MaxPrice.value,
-                    user2MaxPrice = _user2MaxPrice.value,
-                    latitude = _userLocation.value?.latitude,
-                    longitude = _userLocation.value?.longitude,
-                    searchQuery = _searchQuery.value.ifBlank { null },
-                    sortBy = sortBy,
-                    sortDirection = sortDirection,
-                    page = currentPage,
-                    pageSize = pageSize,
-                    vendorFilters = _vendorFilters.value.toList()
-                )
+                val result = repository.searchVendors(buildSearchRequest(page = currentPage))
 
                 result.onSuccess { response ->
                     // Append new vendor responses to cache
